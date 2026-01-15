@@ -11,7 +11,7 @@
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* 全体デザイン */
+    /* CSSスタイル（変更なし） */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
@@ -21,7 +21,6 @@
     .required::after { content: "必須"; background: #ff4b4b; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
     .optional::after { content: "任意"; background: #aaa; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
     
-    /* 入力フォーム（チェックボックス以外）のデザイン */
     input:not([type="checkbox"]), select, textarea { 
       width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; 
       box-sizing: border-box; transition: 0.3s; -webkit-appearance: none; background: #fff; 
@@ -48,16 +47,12 @@
     .confirm-total-label { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
     .confirm-total-price { font-size: 2rem; color: #06C755; font-weight: bold; }
     
-    /* 同意エリアとチェックボックスのデザイン */
     .agreement-area { background-color: #fff8f0; border: 1px solid #e0c0a0; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 0.9rem; }
     .agree-item { margin-bottom: 12px; display: flex; align-items: start; cursor: pointer; }
     
-    /* チェックボックスを見えるようにする設定 */
     .agree-item input { 
       width: 20px; height: 20px; margin-right: 10px; margin-top: 2px;
-      -webkit-appearance: checkbox; /* これでチェックマークが出ます */
-      appearance: checkbox;
-      padding: 0;
+      -webkit-appearance: checkbox; appearance: checkbox; padding: 0;
     }
     
     .tos-link { color: #0066cc; text-decoration: underline; }
@@ -69,7 +64,6 @@
     #input-screen { display: none; }
     #confirm-screen { display: none; }
     #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
-    
     .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
     .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
     .submit-btn-mini { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; }
@@ -134,6 +128,7 @@
         <tr><th>お名前</th><td id="conf-name"></td></tr>
         <tr><th>ふりがな</th><td id="conf-kana"></td></tr>
         <tr><th>電話番号</th><td id="conf-phone"></td></tr>
+        <tr><th>郵便番号</th><td id="conf-zip"></td></tr>
         <tr><th>住所</th><td id="conf-address" style="font-size:0.8rem;"></td></tr>
       </table>
       <div class="section-title">予約内容</div>
@@ -199,13 +194,11 @@
             liff.getProfile().then(profile => {
               lineProfile = profile;
               document.getElementById('user-name').innerText = profile.displayName;
-              // ★ユーザー情報照会
               checkUserStatus(profile.userId);
             });
           }
         })
         .catch(err => {
-          // エラー時も画面は出す
           document.getElementById('loading').style.display = 'none';
           document.getElementById('input-screen').style.display = 'block';
           document.getElementById('price-bar').style.display = 'flex';
@@ -242,7 +235,7 @@
       });
     };
 
-    // ★ユーザー照会機能
+    // ★ユーザー照会機能（郵便番号対応）
     function checkUserStatus(userId) {
       document.getElementById('loading').innerHTML = "🔄 お客様情報を確認中...";
       
@@ -259,11 +252,12 @@
       .then(response => response.json())
       .then(data => {
         if (data.result === 'found') {
-          // データがあったら埋める
           const u = data.userData;
           document.getElementById('regName').value = u.regName;
           document.getElementById('regKana').value = u.regKana;
           document.getElementById('regPhone').value = u.regPhone;
+          // ★郵便番号をセット
+          document.getElementById('zipcode').value = u.regZip || ""; 
           document.getElementById('regAddress').value = u.regAddress;
           
           document.getElementById('new-user-msg').style.display = 'none';
@@ -274,7 +268,6 @@
         document.getElementById('price-bar').style.display = 'flex';
       })
       .catch(err => {
-        // エラーでも止まらずに画面を出す
         document.getElementById('loading').style.display = 'none';
         document.getElementById('input-screen').style.display = 'block';
         document.getElementById('price-bar').style.display = 'flex';
@@ -317,6 +310,7 @@
       const regName = document.getElementById('regName').value;
       const regKana = document.getElementById('regKana').value;
       const regPhone = document.getElementById('regPhone').value;
+      const regZip = document.getElementById('zipcode').value; // ★郵便番号取得
       const regAddress = document.getElementById('regAddress').value;
       
       if(!regName || !regKana || !regPhone || !regAddress) {
@@ -332,6 +326,7 @@
       document.getElementById('conf-name').innerText = regName;
       document.getElementById('conf-kana').innerText = regKana;
       document.getElementById('conf-phone').innerText = regPhone;
+      document.getElementById('conf-zip').innerText = regZip; // ★確認画面に表示
       document.getElementById('conf-address').innerText = regAddress;
 
       document.getElementById('conf-date').innerText = range;
@@ -389,6 +384,7 @@
         regName: document.getElementById('conf-name').innerText,
         regKana: document.getElementById('conf-kana').innerText,
         regPhone: document.getElementById('conf-phone').innerText,
+        regZip: document.getElementById('conf-zip').innerText, // ★郵便番号を送信
         regAddress: document.getElementById('conf-address').innerText,
         dateRange: document.getElementById('conf-date').innerText,
         totalDays: document.getElementById('conf-days').innerText,
