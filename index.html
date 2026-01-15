@@ -150,10 +150,10 @@
   <script>
     var vConsole = new VConsole();
 
-    // ★★★ GASのURLをここに貼ってください ★★★
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec"; 
+    // ★★★ 設定済みのURL ★★★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
     const MY_LIFF_ID = "2008826232-lvGwqtl1";
-    // ★★★★★★★★★★★★★★★★★★★★★★★
+    // ★★★★★★★★★★★★★
 
     const masterData = {
       bikes: [
@@ -183,14 +183,13 @@
               lineProfile = profile;
               document.getElementById('user-name').innerText = profile.displayName;
               
-              // ★ここでGASに「この人知ってる？」と聞きに行きます
+              // ★ここでGASに過去データを問い合わせます
               checkUserStatus(profile.userId);
             });
           }
         })
         .catch(err => {
           console.error(err);
-          // エラー時も画面は出す
           document.getElementById('loading').style.display = 'none';
           document.getElementById('input-screen').style.display = 'block';
           document.getElementById('price-bar').style.display = 'flex';
@@ -227,23 +226,18 @@
       });
     };
 
-    // ★ユーザー照会機能
+    // ★ユーザー照会機能（修正済み：mode: 'no-cors' 削除）
     function checkUserStatus(userId) {
       document.getElementById('loading').innerHTML = "🔄 お客様情報を確認中...";
       
       const postData = {
-        action: "check", // 検索モード
+        action: "check", 
         userId: userId
       };
 
       fetch(GAS_URL, {
         method: 'POST',
-        mode: 'no-cors', // no-corsだとレスポンス読めないが、GAS側をtext/plainで返せばいける場合も。
-        // ★GASの仕様上、ブラウザからFetchでJSONを受け取るには
-        // "redirect: follow" が必要で、かつGAS側が ContentService を返す必要がある。
-        // 今回はシンプルにするため "no-cors" ではなく標準モードで試みます。
-        // もしCORSエラーが出る場合、少し裏技的な書き方が必要になります。
-        headers: { 'Content-Type': 'text/plain' }, // CORS回避のおまじない
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(postData)
       })
       .then(response => response.json())
@@ -268,7 +262,7 @@
       })
       .catch(err => {
         console.error("検索エラーまたは初回:", err);
-        // エラーでも止まらずに画面を出す（初回ユーザーとして扱う）
+        // エラーでも止まらずに画面を出す
         document.getElementById('loading').style.display = 'none';
         document.getElementById('input-screen').style.display = 'block';
         document.getElementById('price-bar').style.display = 'flex';
@@ -377,7 +371,7 @@
       btn.innerText = "送信中...";
 
       const postData = {
-        action: "reserve", // 予約モード
+        action: "reserve",
         userId: lineProfile ? lineProfile.userId : "unknown",
         displayName: lineProfile ? lineProfile.displayName : "unknown",
         regName: document.getElementById('conf-name').innerText,
