@@ -9,46 +9,67 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
 
   <style>
-    /* CSSスタイル（変更なし） */
+    /* 全体デザイン */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
     .section-title { margin-top: 30px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; font-size: 1.1rem; font-weight: bold; color: #333; }
+    
     label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; margin-top: 15px; }
     .required::after { content: "必須"; background: #ff4b4b; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
     .optional::after { content: "任意"; background: #aaa; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
-    input, select, textarea { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; -webkit-appearance: none; background: #fff; }
+    
+    /* 入力フォーム（チェックボックス以外）のデザイン */
+    input:not([type="checkbox"]), select, textarea { 
+      width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; 
+      box-sizing: border-box; transition: 0.3s; -webkit-appearance: none; background: #fff; 
+    }
     input:focus, select:focus, textarea:focus { border-color: #06C755; outline: none; background-color: #fafffb; }
+    
     .zip-group { display: flex; gap: 10px; }
     .zip-group input { width: 120px; } 
     .zip-group button { width: auto; margin: 0; padding: 0 15px; font-size: 0.9rem; background: #666; color: white; border-radius: 10px; border:none; cursor:pointer;}
+    
     input.calendar-input { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2306C755" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>'); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; cursor: pointer; }
+    
     .option-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
     .option-label { font-size: 0.95rem; flex: 1; }
     .option-price { font-size: 0.85rem; color: #888; margin-right: 10px; }
     .option-select { width: 80px; padding: 8px; margin-bottom: 0; }
     .register-alert { background-color: #e6f9ed; border: 1px solid #06C755; color: #048c3b; padding: 15px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 20px; }
     textarea { resize: vertical; height: 80px; }
+    
     .confirm-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     .confirm-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: #888; font-size: 0.85rem; width: 35%; }
     .confirm-table td { text-align: right; padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 1rem; }
     .confirm-total { text-align: center; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; }
     .confirm-total-label { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
     .confirm-total-price { font-size: 2rem; color: #06C755; font-weight: bold; }
+    
+    /* 同意エリアとチェックボックスのデザイン */
     .agreement-area { background-color: #fff8f0; border: 1px solid #e0c0a0; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 0.9rem; }
     .agree-item { margin-bottom: 12px; display: flex; align-items: start; cursor: pointer; }
-    .agree-item input { width: 20px; height: 20px; margin-right: 10px; margin-top: 2px; }
+    
+    /* チェックボックスを見えるようにする設定 */
+    .agree-item input { 
+      width: 20px; height: 20px; margin-right: 10px; margin-top: 2px;
+      -webkit-appearance: checkbox; /* これでチェックマークが出ます */
+      appearance: checkbox;
+      padding: 0;
+    }
+    
     .tos-link { color: #0066cc; text-decoration: underline; }
     .btn-group { display: flex; gap: 10px; margin-top: 20px; }
     .btn-back { width: 40%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: pointer; }
     .btn-submit { width: 60%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: not-allowed; transition: 0.3s; }
     .btn-submit.active { background: linear-gradient(135deg, #06C755, #04b34b); box-shadow: 0 4px 10px rgba(6, 199, 85, 0.3); cursor: pointer; }
+    
     #input-screen { display: none; }
     #confirm-screen { display: none; }
     #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
+    
     .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
     .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
     .submit-btn-mini { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; }
@@ -148,8 +169,6 @@
   </div>
 
   <script>
-    var vConsole = new VConsole();
-
     // ★★★ 設定済みのURL ★★★
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
     const MY_LIFF_ID = "2008826232-lvGwqtl1";
@@ -172,8 +191,6 @@
     let lineProfile = null;
 
     window.onload = function() {
-      console.log("Start loading...");
-
       liff.init({ liffId: MY_LIFF_ID })
         .then(() => {
           if (!liff.isLoggedIn()) {
@@ -182,14 +199,13 @@
             liff.getProfile().then(profile => {
               lineProfile = profile;
               document.getElementById('user-name').innerText = profile.displayName;
-              
-              // ★ここでGASに過去データを問い合わせます
+              // ★ユーザー情報照会
               checkUserStatus(profile.userId);
             });
           }
         })
         .catch(err => {
-          console.error(err);
+          // エラー時も画面は出す
           document.getElementById('loading').style.display = 'none';
           document.getElementById('input-screen').style.display = 'block';
           document.getElementById('price-bar').style.display = 'flex';
@@ -226,7 +242,7 @@
       });
     };
 
-    // ★ユーザー照会機能（修正済み：mode: 'no-cors' 削除）
+    // ★ユーザー照会機能
     function checkUserStatus(userId) {
       document.getElementById('loading').innerHTML = "🔄 お客様情報を確認中...";
       
@@ -242,7 +258,6 @@
       })
       .then(response => response.json())
       .then(data => {
-        console.log("Check result:", data);
         if (data.result === 'found') {
           // データがあったら埋める
           const u = data.userData;
@@ -251,17 +266,14 @@
           document.getElementById('regPhone').value = u.regPhone;
           document.getElementById('regAddress').value = u.regAddress;
           
-          // メッセージ切り替え
           document.getElementById('new-user-msg').style.display = 'none';
           document.getElementById('repeat-user-msg').style.display = 'block';
         }
-        // 画面表示
         document.getElementById('loading').style.display = 'none';
         document.getElementById('input-screen').style.display = 'block';
         document.getElementById('price-bar').style.display = 'flex';
       })
       .catch(err => {
-        console.error("検索エラーまたは初回:", err);
         // エラーでも止まらずに画面を出す
         document.getElementById('loading').style.display = 'none';
         document.getElementById('input-screen').style.display = 'block';
