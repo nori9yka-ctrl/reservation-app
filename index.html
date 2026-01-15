@@ -165,10 +165,11 @@
   </div>
 
   <script>
-    // ★★★ 設定エリア (ここだけ書き換えてください) ★★★
-    const GAS_URL = "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxx/exec"; 
+    // ★★★ 設定エリア (修正済み) ★★★
+    // ここにあなたの正しいGASのURLを入れました
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
     const MY_LIFF_ID = "2008826232-lvGwqtl1";
-    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    // ★★★★★★★★★★★★★★★★★★★
 
     // マスタデータ
     const masterData = {
@@ -185,7 +186,7 @@
     };
 
     let fpInstance;
-    let lineProfile = null; // LINEユーザー情報を保持
+    let lineProfile = null;
 
     window.onload = function() {
       // 1. LIFF初期化
@@ -204,9 +205,10 @@
           }
         })
         .catch(err => {
-          alert("LIFF Error: " + err);
+          // LIFF外で開いた場合のエラーハンドリング
           document.getElementById('loading').style.display = 'none';
           document.getElementById('input-screen').style.display = 'block';
+          document.getElementById('price-bar').style.display = 'flex';
         });
 
       // 2. カレンダー
@@ -242,7 +244,6 @@
       });
     };
 
-    // 住所検索
     function searchAddress() {
       const zip = document.getElementById('zipcode').value;
       if (zip.length < 7) return alert("郵便番号は7桁で入力してください");
@@ -255,7 +256,6 @@
         });
     }
 
-    // 金額計算
     function calcTotal() {
       const dates = fpInstance.selectedDates;
       let days = 0;
@@ -276,7 +276,6 @@
       return total;
     }
 
-    // 確認画面へ
     function showConfirm() {
       const regName = document.getElementById('regName').value;
       const regKana = document.getElementById('regKana').value;
@@ -341,13 +340,11 @@
       }
     }
 
-    // ★★★ 本番：GASへ送信 ★★★
     function sendToGas() {
       const btn = document.getElementById('finalSubmitBtn');
       btn.disabled = true;
       btn.innerText = "送信中...";
 
-      // 送信データの作成
       const postData = {
         userId: lineProfile ? lineProfile.userId : "unknown",
         displayName: lineProfile ? lineProfile.displayName : "unknown",
@@ -363,14 +360,15 @@
         totalPrice: document.getElementById('conf-price').innerText
       };
 
-      fetch(GAS_URL, {https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec
+      // ★ここが修正されています
+      fetch(GAS_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
       }).then(() => {
         alert("ご予約ありがとうございます！\n予約完了しました。");
-        liff.closeWindow(); // 画面を閉じる
+        liff.closeWindow(); 
       }).catch(err => {
         alert("送信エラー: " + err);
         btn.disabled = false;
