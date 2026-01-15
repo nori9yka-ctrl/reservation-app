@@ -8,34 +8,64 @@
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
   
   <style>
-    /* --- レイアウトと基本デザイン --- */
+    /* --- 基本設定 --- */
     body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f9; color: #333; display: flex; height: 100vh; }
+    
+    /* サイドバー */
     .sidebar { width: 250px; background-color: #343a40; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; background-color: #06C755; text-align: center; }
     .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #4b545c; transition: 0.3s; }
     .nav-item:hover, .nav-item.active { background-color: #495057; border-left: 4px solid #06C755; }
+    
+    /* メインエリア */
     .main { flex-grow: 1; padding: 20px; overflow-y: auto; }
-    .page-title { font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background-color: #f8f9fa; color: #555; white-space: nowrap; }
-    tr:hover { background-color: #f9f9f9; }
+    
+    /* 共通パーツ */
     .btn { padding: 8px 16px; background: #06C755; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
     .btn-sm { padding: 4px 10px; font-size: 0.85rem; margin-right: 5px; }
-    .btn-print { background: #333; color: white; }
+    .btn-print { background: #333; }
     .view-section { display: none; }
     .view-section.active { display: block; }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background-color: #f8f9fa; color: #555; }
+
+    /* --- 📝 貸渡証（帳票）のデザイン --- */
+    .sheet-container {
+      background: white; width: 210mm; min-height: 297mm; padding: 15mm; 
+      margin: 0 auto; box-shadow: 0 0 15px rgba(0,0,0,0.1); box-sizing: border-box;
+      position: relative;
+    }
+    .sheet-title { text-align: center; font-size: 16pt; border-bottom: 3px double #333; padding-bottom: 5px; margin-bottom: 15px; }
+    .sheet-section { background-color: #333; color: #fff; padding: 3px 10px; font-weight: bold; margin-top: 15px; margin-bottom: 5px; font-size: 11pt; }
+    .sheet-box { border: 2px solid #000; padding: 10px; font-size: 10pt; }
+    .sheet-row { display: flex; gap: 15px; margin-bottom: 8px; align-items: flex-end; }
+    .sheet-col { flex: 1; }
+    .sheet-label { font-size: 9pt; font-weight: bold; display: block; margin-bottom: 2px; color: #555; }
     
-    /* モーダルウィンドウのデザイン */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .modal h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    .modal-buttons { text-align: right; margin-top: 20px; }
-    .btn-cancel { background: #999; margin-right: 10px; }
+    /* 重要：書き込める入力欄のデザイン */
+    .sheet-input {
+      width: 100%; border: none; border-bottom: 1px solid #333; 
+      background: #fdfdfd; font-size: 11pt; padding: 2px 5px; 
+      font-family: inherit; color: #000; outline: none; transition: 0.2s;
+    }
+    .sheet-input:focus { background: #e8f0fe; border-bottom: 2px solid #06C755; }
+    
+    /* 印刷時の設定（ここがミソです！） */
+    @media print {
+      body { background: white; height: auto; display: block; }
+      .sidebar, .no-print { display: none !important; } /* サイドバーとボタンを消す */
+      .main { padding: 0; overflow: visible; }
+      .sheet-container { box-shadow: none; margin: 0; padding: 0; width: 100%; }
+      .sheet-input { background: transparent !important; border-bottom: 1px solid #000 !important; }
+      /* 入力フォーカス時の色も消す */
+      .sheet-input:focus { border-bottom: 1px solid #000 !important; }
+      .view-section { display: none; }
+      #sheet-view { display: block !important; } /* 帳票だけ表示 */
+    }
   </style>
 </head>
 <body>
@@ -43,7 +73,7 @@
   <div class="sidebar">
     <div class="sidebar-header">管理画面</div>
     <div class="nav-item active" onclick="switchView('bookings')">📋 予約リスト</div>
-    <div class="nav-item" onclick="switchView('vehicles')">🏍 車両管理 (メンテ)</div>
+    <div class="nav-item" onclick="switchView('sheet-view')" id="nav-sheet" style="display:none;">📝 貸渡証作成</div>
     <div class="nav-item" onclick="switchView('calendar')">📅 カレンダー</div>
   </div>
 
@@ -51,83 +81,149 @@
     
     <div id="bookings" class="view-section active">
       <h2 class="page-title">全予約リスト</h2>
-      <div class="card">
+      <div style="background:white; padding:20px; border-radius:8px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-          <input type="text" placeholder="名前や予約IDで検索..." style="padding:8px; width:300px;">
-          <button class="btn" onclick="fetchBookings()">🔄 更新</button>
+          <input type="text" placeholder="名前検索..." style="padding:8px; border:1px solid #ddd; width:200px;">
+          <button class="btn" onclick="fetchBookings()">🔄 リスト更新</button>
         </div>
-        <p id="loading-msg" style="display:none; color:#666;">データを読み込み中...</p>
+        <p id="loading-msg" style="display:none;">データ取得中...</p>
         <table>
           <thead>
-            <tr>
-              <th>申込日</th><th>名前</th><th>電話番号</th><th>バイク</th><th>期間</th><th>貸渡証</th>
-            </tr>
+            <tr><th>日時</th><th>名前</th><th>バイク</th><th>ステータス</th><th>操作</th></tr>
           </thead>
           <tbody id="booking-list-body"></tbody>
         </table>
       </div>
     </div>
 
-    <div id="vehicles" class="view-section">
-      <h2 class="page-title">車両管理</h2>
-      <div class="card"><p>※ここは次回GASと接続します</p></div>
-    </div>
-
     <div id="calendar" class="view-section">
-      <h2 class="page-title">予約カレンダー</h2>
-      <div class="card"><div id='calendar-el'></div></div>
+      <div style="background:white; padding:20px;"><div id='calendar-el'></div></div>
     </div>
 
-  </div>
-
-  <div id="editModal" class="modal">
-    <div class="modal-content">
-      <h3>貸渡証情報の編集・発行</h3>
-      <input type="hidden" id="edit-rowIndex">
+    <div id="sheet-view" class="view-section">
       
-      <div class="form-group">
-        <label>お名前</label>
-        <input type="text" id="edit-name">
-      </div>
-      <div class="form-group">
-        <label>電話番号</label>
-        <input type="text" id="edit-phone">
-      </div>
-      <div class="form-group">
-        <label>住所</label>
-        <input type="text" id="edit-address">
-      </div>
-      
-      <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-      
-      <div class="form-group">
-        <label>免許証番号</label>
-        <input type="text" id="edit-license" placeholder="入力してください">
-      </div>
-      <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1;">
-          <label>出発時 距離 (km)</label>
-          <input type="number" id="edit-startKm" placeholder="例: 12500">
-        </div>
-        <div class="form-group" style="flex:1;">
-          <label>返却時 距離 (km)</label>
-          <input type="number" id="edit-endKm" placeholder="返却時に記入">
-        </div>
+      <div class="no-print" style="margin-bottom:20px; text-align:center; position:sticky; top:0; z-index:100; background:#f4f6f9; padding:10px;">
+        <button class="btn btn-print" onclick="window.print()" style="font-size:1.2rem; padding:10px 30px;">🖨 印刷する</button>
+        <button class="btn" onclick="saveSheetData()" id="btn-save" style="font-size:1.2rem; padding:10px 30px; margin-left:20px;">💾 保存する</button>
+        <button class="btn" onclick="switchView('bookings')" style="background:#666; margin-left:20px;">戻る</button>
+        <div style="margin-top:5px; font-size:0.9rem; color:#d00;">※変更した内容は必ず「保存」してから印刷してください</div>
       </div>
 
-      <div class="modal-buttons">
-        <button class="btn btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn btn-print" onclick="saveAndPrint()">💾 保存して印刷</button>
+      <div class="sheet-container">
+        <h1 class="sheet-title">レンタルバイク 貸渡証 兼 車両確認書</h1>
+        <div style="text-align: right; font-size: 9pt;">受付No.：<span id="sheet-id" style="font-weight:bold;"></span></div>
+
+        <input type="hidden" id="sheet-rowIndex">
+
+        <div class="sheet-section">1. 契約基本情報</div>
+        <div class="sheet-box">
+          <div class="sheet-row">
+            <div class="sheet-col">
+              <span class="sheet-label">車種名</span>
+              <input type="text" class="sheet-input" id="sheet-bike">
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">期間</span>
+              <input type="text" class="sheet-input" id="sheet-dateRange">
+            </div>
+          </div>
+          <div class="sheet-row">
+            <div class="sheet-col">
+              <span class="sheet-label">出発時 距離 (km)</span>
+              <input type="number" class="sheet-input" id="sheet-startKm" placeholder="出発時に記入">
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">返却時 距離 (km)</span>
+              <input type="number" class="sheet-input" id="sheet-endKm" placeholder="返却時に記入">
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">貸渡料金 (税込)</span>
+              <input type="text" class="sheet-input" id="sheet-price">
+            </div>
+          </div>
+        </div>
+        
+        <div class="sheet-section">2. ご利用者様情報</div>
+        <div class="sheet-box">
+          <div class="sheet-row">
+            <div class="sheet-col" style="flex:2;">
+              <span class="sheet-label">氏名</span>
+              <input type="text" class="sheet-input" id="sheet-name">
+            </div>
+            <div class="sheet-col" style="flex:1.5;">
+              <span class="sheet-label">電話番号</span>
+              <input type="text" class="sheet-input" id="sheet-phone">
+            </div>
+          </div>
+          <div class="sheet-row">
+            <div class="sheet-col">
+              <span class="sheet-label">住所</span>
+              <input type="text" class="sheet-input" id="sheet-address">
+            </div>
+          </div>
+          <div class="sheet-row">
+            <div class="sheet-col">
+              <span class="sheet-label">免許証番号 <span style="color:red; font-size:0.8rem;">(※必須)</span></span>
+              <input type="text" class="sheet-input" id="sheet-license" placeholder="ご来店時にご記入ください">
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-section" style="background:#0056b3;">3. 保険・補償プラン</div>
+        <div class="sheet-box" style="background:#fff5f5; border:2px solid #d00;">
+          <div style="font-weight:bold; color:#d00; text-align:center;">□ 加入プランにチェックを入れてください</div>
+          <div style="margin-top:5px;">
+            <label style="margin-right:20px;"><input type="checkbox"> 免責補償制度 (CDW) 加入</label>
+            <label><input type="checkbox"> 未加入</label>
+          </div>
+          <hr style="border-top:1px dashed #d00;">
+          <div>
+            <label><input type="checkbox"> NOC（ノンオペレーションチャージ）規定に同意します</label>
+          </div>
+        </div>
+
+        <div class="sheet-section">4. 車両状態チェック</div>
+        <div class="sheet-box">
+          <div class="sheet-row">
+            <div class="sheet-col">
+              <span class="sheet-label">燃料残量</span>
+              <input type="text" class="sheet-input" value="出発： 満タン / 返却：＿＿＿＿">
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">傷チェック (メモ)</span>
+              <input type="text" class="sheet-input" placeholder="例：タンク右側に小傷あり">
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; border-top:1px dashed #ccc; padding-top:20px;">
+          <div style="font-weight:bold;">上記内容を確認し、相違ないことを認めます。</div>
+          <div style="text-align:right; margin-top:30px;">
+            ご署名：__________________________________________
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
 
   <script>
-    // ★★★ あなたのGAS URLをここに貼ってください ★★★
+    // ★★★ GAS URL ★★★
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
-    // ★★★★★★★★★★★★★★★★★★★★★★★★
+    // ★★★★★★★★★★★★
 
-    let currentBookings = []; // 取得したデータを保持
+    let currentBookings = [];
+
+    // 画面初期化
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchBookings();
+      var calendarEl = document.getElementById('calendar-el');
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth', headerToolbar: { left: 'prev,next', right: 'dayGridMonth,listWeek' }
+      });
+      calendar.render();
+    });
 
     function switchView(viewId) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -135,15 +231,11 @@
       document.getElementById(viewId).classList.add('active');
     }
 
-    // --- 予約データの取得 (GASから) ---
+    // 予約リスト取得
     function fetchBookings() {
       document.getElementById('loading-msg').style.display = 'block';
-      const tbody = document.getElementById('booking-list-body');
-      tbody.innerHTML = "";
-
       fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: "get_bookings" })
       })
       .then(res => res.json())
@@ -151,184 +243,90 @@
         document.getElementById('loading-msg').style.display = 'none';
         if(data.result === 'success') {
           currentBookings = data.data;
-          renderBookings(currentBookings);
-        } else {
-          alert("データ取得エラー: " + data.message);
+          renderList(currentBookings);
         }
-      })
-      .catch(err => {
-        alert("通信エラー");
-        console.error(err);
       });
     }
 
-    function renderBookings(list) {
+    function renderList(list) {
       const tbody = document.getElementById('booking-list-body');
       let html = "";
       list.forEach(b => {
         html += `
           <tr>
-            <td>${b.date}</td>
-            <td>${b.name}</td>
-            <td>${b.phone}</td>
-            <td>${b.bike}</td>
-            <td>${b.dateRange}</td>
-            <td>
-              <button class="btn btn-sm btn-print" onclick="openEditModal(${b.rowIndex})">🖨 発行</button>
-            </td>
+            <td>${b.date}</td><td>${b.name}</td><td>${b.bike}</td><td>${b.dateRange}</td>
+            <td><button class="btn btn-sm" onclick="openSheet('${b.id}')">📝 貸渡証作成</button></td>
           </tr>
         `;
       });
       tbody.innerHTML = html;
     }
 
-    // --- モーダル操作 ---
-    function openEditModal(rowIndex) {
-      const booking = currentBookings.find(b => b.rowIndex === rowIndex);
+    // ★貸渡証画面を開く
+    function openSheet(bookingId) {
+      const booking = currentBookings.find(b => b.id === bookingId);
       if(!booking) return;
 
-      // フォームに値をセット
-      document.getElementById('edit-rowIndex').value = booking.rowIndex;
-      document.getElementById('edit-name').value = booking.name;
-      document.getElementById('edit-phone').value = booking.phone;
-      document.getElementById('edit-address').value = booking.address;
-      document.getElementById('edit-license').value = booking.license;
-      document.getElementById('edit-startKm').value = booking.startKm;
-      document.getElementById('edit-endKm').value = booking.endKm;
+      // データを入力欄にセット
+      document.getElementById('sheet-id').innerText = booking.id;
+      document.getElementById('sheet-rowIndex').value = booking.rowIndex;
+      document.getElementById('sheet-bike').value = booking.bike;
+      document.getElementById('sheet-dateRange').value = booking.dateRange;
+      document.getElementById('sheet-price').value = booking.price;
+      
+      document.getElementById('sheet-name').value = booking.name;
+      document.getElementById('sheet-phone').value = booking.phone;
+      document.getElementById('sheet-address').value = booking.address;
+      
+      // 未登録なら空欄、あれば表示
+      document.getElementById('sheet-license').value = booking.license || "";
+      document.getElementById('sheet-startKm').value = booking.startKm || "";
+      document.getElementById('sheet-endKm').value = booking.endKm || "";
 
-      document.getElementById('editModal').style.display = 'flex';
+      // 画面切り替え
+      switchView('sheet-view');
+      document.getElementById('nav-sheet').style.display = 'block';
+      document.getElementById('nav-sheet').classList.add('active');
+      window.scrollTo(0, 0);
     }
 
-    function closeModal() {
-      document.getElementById('editModal').style.display = 'none';
-    }
-
-    // --- 保存して印刷 ---
-    function saveAndPrint() {
-      const rowIndex = document.getElementById('edit-rowIndex').value;
-      const newData = {
-        action: "update_booking",
-        rowIndex: rowIndex,
-        name: document.getElementById('edit-name').value,
-        phone: document.getElementById('edit-phone').value,
-        address: document.getElementById('edit-address').value,
-        license: document.getElementById('edit-license').value,
-        startKm: document.getElementById('edit-startKm').value,
-        endKm: document.getElementById('edit-endKm').value
-      };
-
-      // 1. GASに保存
-      const btn = document.querySelector('.modal-buttons .btn-print');
-      btn.innerText = "保存中...";
+    // ★データを保存する
+    function saveSheetData() {
+      const btn = document.getElementById('btn-save');
+      btn.innerText = "通信中...";
       btn.disabled = true;
 
+      const newData = {
+        action: "update_booking",
+        rowIndex: document.getElementById('sheet-rowIndex').value,
+        name: document.getElementById('sheet-name').value,
+        phone: document.getElementById('sheet-phone').value,
+        address: document.getElementById('sheet-address').value,
+        license: document.getElementById('sheet-license').value,
+        startKm: document.getElementById('sheet-startKm').value,
+        endKm: document.getElementById('sheet-endKm').value
+      };
+
       fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(newData)
       })
       .then(res => res.json())
       .then(data => {
-        btn.innerText = "💾 保存して印刷";
+        btn.innerText = "💾 保存する";
         btn.disabled = false;
-        
         if(data.result === 'success') {
-          // 2. 成功したらモーダルを閉じて印刷画面を開く
-          closeModal();
-          
-          // ローカルデータも更新（再取得の手間を省く）
-          const idx = currentBookings.findIndex(b => b.rowIndex == rowIndex);
+          alert("保存しました！");
+          // ローカルデータも更新（リロードしなくても済むように）
+          const idx = currentBookings.findIndex(b => b.rowIndex == newData.rowIndex);
           if(idx !== -1) {
-             currentBookings[idx] = { ...currentBookings[idx], ...newData };
+            currentBookings[idx] = { ...currentBookings[idx], ...newData };
           }
-          renderBookings(currentBookings);
-
-          // 印刷画面オープン
-          openPrintWindow(currentBookings[idx]);
         } else {
           alert("保存エラー: " + data.message);
         }
       });
     }
-
-    // --- 印刷ウィンドウ (貸渡証デザイン) ---
-    function openPrintWindow(booking) {
-      const printWindow = window.open('', '_blank');
-      
-      const printContent = `
-        <!DOCTYPE html>
-        <html lang="ja">
-        <head>
-        <meta charset="UTF-8">
-        <title>レンタルバイク 貸渡証</title>
-        <style>
-            @page { size: A4; margin: 10mm; }
-            body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #333; }
-            .container { width: 100%; max-width: 800px; margin: 0 auto; border: 1px solid #000; padding: 10px; }
-            h1 { text-align: center; font-size: 16pt; margin: 0 0 5px 0; border-bottom: 3px double #333; padding-bottom: 5px; }
-            .section-title { background-color: #333; color: #fff; padding: 3px 10px; font-weight: bold; margin-top: 10px; margin-bottom: 5px; font-size: 11pt; }
-            .flex-row { display: flex; gap: 10px; margin-bottom: 5px; }
-            .flex-col { flex: 1; padding: 0 5px; }
-            .input-line { border-bottom: 1px solid #999; display: inline-block; width: 100%; min-height: 16px; font-weight:bold; font-size:11pt; }
-            .label { font-size: 9pt; display: block; margin-bottom: 2px; font-weight: bold; }
-            .info-box { border: 2px solid #000; padding: 8px; margin-bottom: 10px; }
-            .checkbox-group label { display: inline-block; margin-right: 15px; }
-            .signature-area { margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; }
-            .sign-line { border-bottom: 2px solid #000; width: 300px; display: inline-block; margin-left: 20px; }
-            @media print { .no-print { display: none; } }
-            .no-print { text-align:center; margin-bottom:20px; padding:10px; background:#eee; }
-            .print-btn { background:#06C755; color:white; padding:10px 30px; border:none; font-size:1.2rem; cursor:pointer; border-radius:5px; }
-        </style>
-        </head>
-        <body>
-        <div class="no-print"><button class="print-btn" onclick="window.print()">🖨 印刷する</button></div>
-        <div class="container">
-            <h1>レンタルバイク 貸渡証 兼 車両確認書</h1>
-            <div style="text-align: right; font-size: 9pt;">受付No.：<span style="border-bottom: 1px solid #000; display: inline-block; width: 80px;">${booking.id}</span></div>
-
-            <div class="section-title">1. 契約基本情報</div>
-            <div class="info-box">
-                <div class="flex-row">
-                    <div class="flex-col" style="flex:1.5;"><span class="label">車種名</span><div class="input-line">${booking.bike}</div></div>
-                    <div class="flex-col" style="flex:2;"><span class="label">期間</span><div class="input-line">${booking.dateRange}</div></div>
-                </div>
-                <div class="flex-row">
-                    <div class="flex-col" style="flex:1;"><span class="label">出発時 (km)</span><div class="input-line">${booking.startKm}</div></div>
-                    <div class="flex-col" style="flex:1;"><span class="label">返却時 (km)</span><div class="input-line">${booking.endKm}</div></div>
-                    <div class="flex-col" style="flex:2;"><span class="label">貸渡料金 (税込)</span><div class="input-line">${booking.price}</div></div>
-                </div>
-            </div>
-            
-            <div class="section-title">2. ご利用者様情報</div>
-            <div class="info-box">
-                <div class="flex-row">
-                    <div class="flex-col" style="flex:2;"><span class="label">氏名</span><div class="input-line">${booking.name} 様</div></div>
-                    <div class="flex-col" style="flex:1.5;"><span class="label">電話番号</span><div class="input-line">${booking.phone}</div></div>
-                </div>
-                <div class="flex-row">
-                    <div class="flex-col"><span class="label">住所</span><div class="input-line">${booking.address}</div></div>
-                </div>
-                <div class="flex-row">
-                    <div class="flex-col"><span class="label">免許証番号</span><div class="input-line">${booking.license}</div></div>
-                </div>
-            </div>
-            
-            <div class="signature-area">
-                <div style="font-weight: bold; margin-bottom: 10px;">上記内容に相違ないことを認めます。</div>
-                <div style="text-align: right; font-size: 11pt;">ご署名： <span class="sign-line"></span></div>
-            </div>
-        </div>
-        </body>
-        </html>
-      `;
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-    }
-
-    // 初期化
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchBookings(); // GASからデータを取得！
-    });
   </script>
 </body>
 </html>
