@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簡単予約フォーム</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background-color: #f0f0f0; }
+    h2 { text-align: center; color: #333; }
+    #form-area { background: white; padding: 20px; border-radius: 10px; display: none; }
+    input, button { width: 100%; padding: 12px; margin-bottom: 15px; box-sizing: border-box; border-radius: 5px; }
+    button { background-color: #06C755; color: white; border: none; font-weight: bold; cursor: pointer; }
+    #loading { text-align: center; margin-top: 50px; }
+  </style>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h2>予約フォーム</h2>
+  
+  <div id="loading">🚀 読み込み中...</div>
+  
+  <div id="form-area">
+    <p>ようこそ、<b><span id="user-name"></span></b> さん</p>
+    <label>📅 予約日</label>
+    <input type="date" id="date">
+    <button onclick="submitData()">予約する</button>
+  </div>
+
+  <script>
+    // ★★★ ここにさっきのGASのURLを貼り付けてください！ ★★★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
+    
+    // LIFF ID (あなたのIDのままでOK)
+    const MY_LIFF_ID = "2008826232-lvGwqtl1";
+
+    // 画面読み込み時に実行
+    window.onload = function() {
+      liff.init({ liffId: MY_LIFF_ID })
+        .then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            liff.getProfile().then(profile => {
+              document.getElementById('user-name').innerText = profile.displayName;
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('form-area').style.display = 'block';
+              
+              // データを一時保存
+              window.userData = profile;
+            });
+          }
+        });
+    };
+
+    // 送信ボタンが押されたらGASにデータを送る
+    function submitData() {
+      const date = document.getElementById('date').value;
+      if(!date) return alert("日付を選んでください");
+
+      // ボタンを連打できないようにする
+      document.querySelector('button').disabled = true;
+      document.querySelector('button').innerText = "送信中...";
+
+      const sendData = {
+        userId: window.userData.userId,
+        name: window.userData.displayName,
+        date: date
+      };
+
+      // GASへ送信
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors', // これ重要
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sendData)
+      }).then(() => {
+        alert("予約が完了しました！");
+        liff.closeWindow();
+      }).catch(err => {
+        alert("送信エラー: " + err);
+      });
+    }
+  </script>
+</body>
+</html>
