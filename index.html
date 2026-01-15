@@ -1,100 +1,394 @@
-// ★1. スプレッドシートIDを入れてください
-const SHEET_ID = '1oZSBfH8GRYP48a-Cmj7P9EusiEjgOENSVLX9bteEEXc'; 
-
-// ★2. さっきコピーした「チャネルアクセストークン」をここに入れてください
-const CHANNEL_ACCESS_TOKEN = 'NrGIU6c/IQEjviccORRQAchNamOsWKBsQA4C0xBPBvRPFgVG09Jr9JQsQRhj0DjgkhLkrq49P/JYctXiFERnF+Nx8mA7KuuuNzy4fMuig0QUpG3JXIepwSdPIDT0Zyj1rg2HaPAhB6l3AyAqmb/CmwdB04t89/1O/w1cDnyilFU='; 
-
-function doPost(e) {
-  try {
-    const params = JSON.parse(e.postData.contents);
-    
-    // データ受け取り
-    const lineUserId = params.userId;
-    const lineDisplayName = params.displayName;
-    const regName = params.regName;
-    const regKana = params.regKana;
-    const regPhone = params.regPhone;
-    const regAddress = params.regAddress;
-    const dateRange = params.dateRange;
-    const totalDays = params.totalDays;
-    const bikeName = params.bikeName;
-    const options = params.options;
-    const memo = params.memo;
-    const totalPrice = params.totalPrice;
-    const agreement = "同意済み"; 
-
-    // 1. スプレッドシートに保存
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
-    sheet.appendRow([
-      new Date(),
-      lineUserId,
-      lineDisplayName,
-      regName,
-      regKana,
-      regPhone,
-      regAddress,
-      dateRange,
-      totalDays,
-      bikeName,
-      options,
-      totalPrice,
-      memo,
-      agreement
-    ]);
-
-    // 2. お客様への返信メッセージを作成
-    const userMessage = `
-${regName} 様
-ご予約ありがとうございます！
-以下の内容で承りました。
-
-📅 期間: ${dateRange} (${totalDays})
-🏍 車種: ${bikeName}
-⛑ オプション:
-${options}
-
-💰 お支払予定額: ${totalPrice}
-
-当日お会いできるのを楽しみにしております！
-ご不明な点があれば、このLINEに返信してください。
-`.trim();
-
-    // 3. LINEにメッセージを送信（プッシュメッセージ）
-    sendLineMessage(lineUserId, userMessage);
-    
-    return ContentService.createTextOutput(JSON.stringify({ result: 'success' }))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch (error) {
-    // エラーが起きてもログに残して、スマホ側にはエラーを返さないようにする
-    console.error("Error:", error);
-    return ContentService.createTextOutput(JSON.stringify({ result: 'error', message: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// LINEにメッセージを送るための便利関数
-function sendLineMessage(userId, text) {
-  const url = 'https://api.line.me/v2/bot/message/push';
-  const options = {
-    'method': 'post',
-    'headers': {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN
-    },
-    'payload': JSON.stringify({
-      'to': userId,
-      'messages': [{
-        'type': 'text',
-        'text': text
-      }]
-    })
-  };
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>レンタル予約</title>
   
-  // 送信実行（エラーが起きても無視して進むようにtry-catch）
-  try {
-    UrlFetchApp.fetch(url, options);
-  } catch (e) {
-    console.error("LINE送信エラー:", e);
-  }
-}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+
+  <style>
+    /* デザイン設定 */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
+    h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
+    .section-title { margin-top: 30px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; font-size: 1.1rem; font-weight: bold; color: #333; }
+    
+    label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; margin-top: 15px; }
+    .required::after { content: "必須"; background: #ff4b4b; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .optional::after { content: "任意"; background: #aaa; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    input, select, textarea { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; -webkit-appearance: none; background: #fff; }
+    input:focus, select:focus, textarea:focus { border-color: #06C755; outline: none; background-color: #fafffb; }
+    .zip-group { display: flex; gap: 10px; }
+    .zip-group input { width: 120px; } 
+    .zip-group button { width: auto; margin: 0; padding: 0 15px; font-size: 0.9rem; background: #666; color: white; border-radius: 10px; border:none; cursor:pointer;}
+    
+    input.calendar-input { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2306C755" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>'); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; cursor: pointer; }
+    
+    .option-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .option-label { font-size: 0.95rem; flex: 1; }
+    .option-price { font-size: 0.85rem; color: #888; margin-right: 10px; }
+    .option-select { width: 80px; padding: 8px; margin-bottom: 0; }
+    .register-alert { background-color: #e6f9ed; border: 1px solid #06C755; color: #048c3b; padding: 15px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 20px; }
+    textarea { resize: vertical; height: 80px; }
+
+    .confirm-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .confirm-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: #888; font-size: 0.85rem; width: 35%; }
+    .confirm-table td { text-align: right; padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 1rem; }
+    .confirm-total { text-align: center; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; }
+    .confirm-total-label { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
+    .confirm-total-price { font-size: 2rem; color: #06C755; font-weight: bold; }
+
+    .agreement-area { background-color: #fff8f0; border: 1px solid #e0c0a0; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 0.9rem; }
+    .agree-item { margin-bottom: 12px; display: flex; align-items: start; cursor: pointer; }
+    .agree-item input { width: 20px; height: 20px; margin-right: 10px; margin-top: 2px; }
+    .tos-link { color: #0066cc; text-decoration: underline; }
+
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-back { width: 40%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: pointer; }
+    .btn-submit { width: 60%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: not-allowed; transition: 0.3s; }
+    .btn-submit.active { background: linear-gradient(135deg, #06C755, #04b34b); box-shadow: 0 4px 10px rgba(6, 199, 85, 0.3); cursor: pointer; }
+
+    #input-screen { display: none; }
+    #confirm-screen { display: none; }
+    #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
+    
+    .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
+    .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
+    .submit-btn-mini { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div id="loading">
+    🚀 読み込み中...<br>
+    <span style="font-size:0.8rem; font-weight:normal;">(もし10秒以上このままなら、右下の緑ボタンを押してエラーを見てください)</span>
+  </div>
+
+  <div id="input-screen">
+    <div class="card">
+      <div style="text-align:center; margin-bottom:10px;">
+        ようこそ <span id="user-name" style="font-weight:bold;">ゲスト</span> さん
+      </div>
+      <h2>レンタル予約</h2>
+
+      <div id="register-area">
+        <div class="register-alert">🔰 初回のみお客様情報をご登録ください</div>
+        
+        <label class="required">お名前</label>
+        <input type="text" id="regName" placeholder="例：山田 太郎">
+        <label class="required">ふりがな</label>
+        <input type="text" id="regKana" placeholder="例：やまだ たろう">
+        <label class="required">電話番号</label>
+        <input type="tel" id="regPhone" placeholder="090-1234-5678">
+        
+        <label class="optional">郵便番号 (住所検索用)</label>
+        <div class="zip-group">
+          <input type="tel" id="zipcode" placeholder="7桁の数字" maxlength="7">
+          <button type="button" onclick="searchAddress()">住所検索</button>
+        </div>
+        <label class="required">住所</label>
+        <input type="text" id="regAddress" placeholder="市区町村・番地・建物名">
+      </div>
+
+      <div class="section-title">ご予約内容</div>
+      <label class="required">ご利用期間</label>
+      <input type="text" id="dateRange" class="calendar-input" placeholder="期間を選択" readonly>
+      <div id="days-display" style="text-align:right; font-size:0.8rem; color:#888; margin-top:4px;">0泊0日</div>
+
+      <label class="required">バイク選択</label>
+      <select id="bikeSelect" onchange="calcTotal()">
+        <option value="0">選択してください</option>
+      </select>
+
+      <label>オプション選択 (1日あたり)</label>
+      <div id="optionArea"></div>
+
+      <label>備考</label>
+      <textarea id="memo"></textarea>
+      <div style="height: 60px;"></div>
+    </div>
+  </div>
+
+  <div id="confirm-screen">
+    <div class="card">
+      <h2>ご予約内容の確認</h2>
+      <p style="text-align:center; font-size:0.9rem; color:#666;">内容をご確認の上、チェックを入れてください。</p>
+
+      <div class="section-title">お客様情報</div>
+      <table class="confirm-table">
+        <tr><th>お名前</th><td id="conf-name"></td></tr>
+        <tr><th>ふりがな</th><td id="conf-kana"></td></tr>
+        <tr><th>電話番号</th><td id="conf-phone"></td></tr>
+        <tr><th>住所</th><td id="conf-address" style="font-size:0.8rem;"></td></tr>
+      </table>
+
+      <div class="section-title">予約内容</div>
+      <table class="confirm-table">
+        <tr><th>期間</th><td id="conf-date" style="font-size:0.9rem;"></td></tr>
+        <tr><th>日数</th><td id="conf-days"></td></tr>
+        <tr><th>バイク</th><td id="conf-bike" style="font-size:0.9rem;"></td></tr>
+        <tr><th>オプション</th><td id="conf-options" style="font-size:0.8rem; white-space: pre-wrap;"></td></tr>
+        <tr><th>備考</th><td id="conf-memo" style="font-size:0.8rem;"></td></tr>
+      </table>
+
+      <div class="confirm-total">
+        <div class="confirm-total-label">お支払い予定総額</div>
+        <div class="confirm-total-price" id="conf-price">¥0</div>
+      </div>
+
+      <div class="agreement-area">
+        <div style="font-weight:bold; margin-bottom:10px; text-align:center;">⚠️ 重要事項の確認</div>
+        <label class="agree-item">
+          <input type="checkbox" id="checkTerms" onchange="checkAgreements()">
+          <span>利用規約の内容を確認し、同意します。</span>
+        </label>
+        <label class="agree-item">
+          <input type="checkbox" id="checkAge" onchange="checkAgreements()">
+          <span>私は18歳以上、または親権者の同意を得た未成年者であることを誓約します。</span>
+        </label>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-back" onclick="goBack()">修正する</button>
+        <button class="btn-submit" id="finalSubmitBtn" onclick="sendToGas()" disabled>予約確定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="price-bar" id="price-bar">
+    <div>
+      <div style="font-size:0.8rem; color:#555;">お支払い予定額</div>
+      <div class="total-price" id="totalPriceDisplay">¥0</div>
+    </div>
+    <button class="submit-btn-mini" onclick="showConfirm()">確認へ進む</button>
+  </div>
+
+  <script>
+    // ★エラー調査ツールを起動
+    var vConsole = new VConsole();
+
+    // ★★★ 設定エリア (ここにURLを貼ってください) ★★★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec"; 
+    const MY_LIFF_ID = "2008826232-lvGwqtl1";
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★
+
+    const masterData = {
+      bikes: [
+        { name: "原付スクーター", price: 3000 },
+        { name: "中型バイク (400cc)", price: 8000 },
+        { name: "大型バイク", price: 15000 }
+      ],
+      options: [
+        { name: "ヘルメット", price: 500 },
+        { name: "グローブ", price: 300 },
+        { name: "車両補償", price: 1000 }
+      ]
+    };
+
+    let fpInstance;
+    let lineProfile = null;
+
+    window.onload = function() {
+      console.log("画面読み込み開始");
+
+      // LIFF初期化
+      liff.init({ liffId: MY_LIFF_ID })
+        .then(() => {
+          console.log("LIFF初期化成功");
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            liff.getProfile().then(profile => {
+              console.log("プロフィール取得成功");
+              lineProfile = profile;
+              document.getElementById('user-name').innerText = profile.displayName;
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('input-screen').style.display = 'block';
+              document.getElementById('price-bar').style.display = 'flex';
+            });
+          }
+        })
+        .catch(err => {
+          console.error("LIFFエラー:", err);
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('input-screen').style.display = 'block';
+          document.getElementById('price-bar').style.display = 'flex';
+          alert("LIFF Error: " + err);
+        });
+
+      // カレンダー設定
+      fpInstance = flatpickr("#dateRange", {
+        mode: "range", minDate: "today", dateFormat: "Y-m-d", locale: "ja", disableMobile: "true",
+        onClose: function() { calcTotal(); }
+      });
+
+      // 選択肢の生成
+      const bikeSelect = document.getElementById('bikeSelect');
+      masterData.bikes.forEach(bike => {
+        const option = document.createElement('option');
+        option.value = bike.name;
+        option.dataset.price = bike.price;
+        option.textContent = `${bike.name} (¥${bike.price.toLocaleString()}/日)`;
+        bikeSelect.appendChild(option);
+      });
+
+      const optionArea = document.getElementById('optionArea');
+      masterData.options.forEach((opt) => {
+        const div = document.createElement('div');
+        div.className = 'option-row';
+        div.innerHTML = `
+          <div class="option-label">${opt.name}</div>
+          <div class="option-price">+¥${opt.price}</div>
+          <select class="option-select" data-price="${opt.price}" data-name="${opt.name}" onchange="calcTotal()">
+            <option value="0">なし</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        `;
+        optionArea.appendChild(div);
+      });
+    };
+
+    // 住所検索
+    function searchAddress() {
+      const zip = document.getElementById('zipcode').value;
+      if (zip.length < 7) return alert("郵便番号は7桁で入力してください");
+      fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.results) {
+            document.getElementById('regAddress').value = data.results[0].address1 + data.results[0].address2 + data.results[0].address3;
+          } else { alert("住所が見つかりませんでした"); }
+        });
+    }
+
+    // 合計計算
+    function calcTotal() {
+      const dates = fpInstance.selectedDates;
+      let days = 0;
+      if (dates.length === 1) days = 1;
+      else if (dates.length === 2) days = Math.ceil(Math.abs(dates[1] - dates[0]) / (86400000)) + 1;
+      document.getElementById('days-display').innerText = days > 0 ? `${days-1}泊 ${days}日` : "0泊0日";
+
+      const bikeSel = document.getElementById('bikeSelect');
+      const bikePrice = bikeSel.options[bikeSel.selectedIndex].dataset.price || 0;
+
+      let optionTotal = 0;
+      document.querySelectorAll('.option-select').forEach(sel => {
+        optionTotal += parseInt(sel.dataset.price) * parseInt(sel.value);
+      });
+
+      const total = (parseInt(bikePrice) + optionTotal) * days;
+      document.getElementById('totalPriceDisplay').innerText = "¥" + total.toLocaleString();
+      return total;
+    }
+
+    // 確認画面へ
+    function showConfirm() {
+      const regName = document.getElementById('regName').value;
+      const regKana = document.getElementById('regKana').value;
+      const regPhone = document.getElementById('regPhone').value;
+      const regAddress = document.getElementById('regAddress').value;
+      
+      if(!regName || !regKana || !regPhone || !regAddress) {
+        alert("⚠️ お客様情報をすべて入力してください"); return;
+      }
+
+      const range = document.getElementById('dateRange').value;
+      const bikeSel = document.getElementById('bikeSelect');
+      if(!range || bikeSel.value === "0") {
+         alert("⚠️ バイクと期間を選択してください"); return;
+      }
+
+      document.getElementById('conf-name').innerText = regName;
+      document.getElementById('conf-kana').innerText = regKana;
+      document.getElementById('conf-phone').innerText = regPhone;
+      document.getElementById('conf-address').innerText = regAddress;
+
+      document.getElementById('conf-date').innerText = range;
+      document.getElementById('conf-days').innerText = document.getElementById('days-display').innerText;
+      document.getElementById('conf-bike').innerText = bikeSel.value;
+      document.getElementById('conf-memo').innerText = document.getElementById('memo').value || "なし";
+      
+      let optStr = "";
+      document.querySelectorAll('.option-select').forEach(sel => {
+        if(parseInt(sel.value) > 0) {
+          optStr += `${sel.dataset.name} × ${sel.value}\n`;
+        }
+      });
+      document.getElementById('conf-options').innerText = optStr || "なし";
+      document.getElementById('conf-price').innerText = document.getElementById('totalPriceDisplay').innerText;
+
+      document.getElementById('input-screen').style.display = 'none';
+      document.getElementById('price-bar').style.display = 'none';
+      document.getElementById('confirm-screen').style.display = 'block';
+      window.scrollTo(0, 0);
+
+      document.getElementById('checkTerms').checked = false;
+      document.getElementById('checkAge').checked = false;
+      checkAgreements();
+    }
+
+    function goBack() {
+      document.getElementById('confirm-screen').style.display = 'none';
+      document.getElementById('input-screen').style.display = 'block';
+      document.getElementById('price-bar').style.display = 'flex';
+    }
+
+    function checkAgreements() {
+      const isTermsChecked = document.getElementById('checkTerms').checked;
+      const isAgeChecked = document.getElementById('checkAge').checked;
+      const btn = document.getElementById('finalSubmitBtn');
+      if (isTermsChecked && isAgeChecked) {
+        btn.disabled = false;
+        btn.classList.add('active');
+      } else {
+        btn.disabled = true;
+        btn.classList.remove('active');
+      }
+    }
+
+    // GAS送信
+    function sendToGas() {
+      const btn = document.getElementById('finalSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = "送信中...";
+
+      const postData = {
+        userId: lineProfile ? lineProfile.userId : "unknown",
+        displayName: lineProfile ? lineProfile.displayName : "unknown",
+        regName: document.getElementById('conf-name').innerText,
+        regKana: document.getElementById('conf-kana').innerText,
+        regPhone: document.getElementById('conf-phone').innerText,
+        regAddress: document.getElementById('conf-address').innerText,
+        dateRange: document.getElementById('conf-date').innerText,
+        totalDays: document.getElementById('conf-days').innerText,
+        bikeName: document.getElementById('conf-bike').innerText,
+        options: document.getElementById('conf-options').innerText,
+        memo: document.getElementById('conf-memo').innerText,
+        totalPrice: document.getElementById('conf-price').innerText
+      };
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
+      }).then(() => {
+        alert("ご予約ありがとうございます！\n予約完了しました。");
+        liff.closeWindow(); 
+      }).catch(err => {
+        console.error(err);
+        alert("送信エラー: " + err);
+        btn.disabled = false;
+        btn.innerText = "予約確定";
+      });
+    }
+  </script>
+</body>
+</html>
