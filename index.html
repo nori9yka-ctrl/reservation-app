@@ -11,7 +11,7 @@
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    /* CSSスタイル（変更なし） */
+    /* デザイン設定（変更なし） */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
@@ -105,11 +105,15 @@
       <input type="text" id="dateRange" class="calendar-input" placeholder="期間を選択" readonly>
       <div id="days-display" style="text-align:right; font-size:0.8rem; color:#888; margin-top:4px;">0泊0日</div>
 
-      <label class="required">バイク選択</label>
-      <select id="bikeSelect" onchange="calcTotal()">
-        <option value="0">選択してください</option>
+      <label class="required">排気量クラス</label>
+      <select id="classSelect" onchange="updateBikeList()">
+        <option value="">クラスを選択してください</option>
       </select>
 
+      <label class="required">車種選択</label>
+      <select id="bikeSelect" onchange="calcTotal()" disabled>
+        <option value="0">先にクラスを選択してください</option>
+      </select>
       <label>オプション選択 (1日あたり)</label>
       <div id="optionArea"></div>
 
@@ -135,7 +139,7 @@
       <table class="confirm-table">
         <tr><th>期間</th><td id="conf-date" style="font-size:0.9rem;"></td></tr>
         <tr><th>日数</th><td id="conf-days"></td></tr>
-        <tr><th>バイク</th><td id="conf-bike" style="font-size:0.9rem;"></td></tr>
+        <tr><th>クラス</th><td id="conf-class"></td></tr> <tr><th>バイク</th><td id="conf-bike" style="font-size:0.9rem;"></td></tr>
         <tr><th>オプション</th><td id="conf-options" style="font-size:0.8rem; white-space: pre-wrap;"></td></tr>
         <tr><th>備考</th><td id="conf-memo" style="font-size:0.8rem;"></td></tr>
       </table>
@@ -169,11 +173,32 @@
     const MY_LIFF_ID = "2008826232-lvGwqtl1";
     // ★★★★★★★★★★★★★
 
+    // ★マスタデータ：クラスの中にバイクを持つ構造に変更
     const masterData = {
-      bikes: [
-        { name: "原付スクーター", price: 3000 },
-        { name: "中型バイク (400cc)", price: 8000 },
-        { name: "大型バイク", price: 15000 }
+      categories: [
+        {
+          name: "原付スクーター (50cc)",
+          bikes: [
+            { name: "ジョグ (黒)", price: 3000 },
+            { name: "ビーノ (白)", price: 3000 },
+            { name: "レッツ4 (銀)", price: 2800 }
+          ]
+        },
+        {
+          name: "中型バイク (400cc)",
+          bikes: [
+            { name: "CB400SF (赤白)", price: 8000 },
+            { name: "ドラッグスター400", price: 8500 },
+            { name: "Ninja 400 (緑)", price: 9000 }
+          ]
+        },
+        {
+          name: "大型バイク (Over 750cc)",
+          bikes: [
+            { name: "ハーレーダビッドソン", price: 15000 },
+            { name: "CB1300SF", price: 14000 }
+          ]
+        }
       ],
       options: [
         { name: "ヘルメット", price: 500 },
@@ -209,15 +234,16 @@
         onClose: function() { calcTotal(); }
       });
 
-      const bikeSelect = document.getElementById('bikeSelect');
-      masterData.bikes.forEach(bike => {
+      // ★クラス選択肢の生成
+      const classSelect = document.getElementById('classSelect');
+      masterData.categories.forEach((cat, index) => {
         const option = document.createElement('option');
-        option.value = bike.name;
-        option.dataset.price = bike.price;
-        option.textContent = `${bike.name} (¥${bike.price.toLocaleString()}/日)`;
-        bikeSelect.appendChild(option);
+        option.value = index; // 配列のインデックスを値にする
+        option.textContent = cat.name;
+        classSelect.appendChild(option);
       });
 
+      // オプション生成
       const optionArea = document.getElementById('optionArea');
       masterData.options.forEach((opt) => {
         const div = document.createElement('div');
@@ -235,7 +261,36 @@
       });
     };
 
-    // ★ユーザー照会機能（郵便番号対応）
+    // ★クラスが選ばれたらバイク一覧を更新する関数
+    function updateBikeList() {
+      const classIdx = document.getElementById('classSelect').value;
+      const bikeSelect = document.getElementById('bikeSelect');
+      
+      // 一旦クリア
+      bikeSelect.innerHTML = '<option value="0">選択してください</option>';
+      
+      if (classIdx === "") {
+        bikeSelect.disabled = true;
+        bikeSelect.innerHTML = '<option value="0">先にクラスを選択してください</option>';
+        calcTotal();
+        return;
+      }
+
+      // 選ばれたカテゴリのバイクを取得
+      const bikes = masterData.categories[classIdx].bikes;
+      
+      bikes.forEach(bike => {
+        const option = document.createElement('option');
+        option.value = bike.name;
+        option.dataset.price = bike.price;
+        option.textContent = `${bike.name} (¥${bike.price.toLocaleString()}/日)`;
+        bikeSelect.appendChild(option);
+      });
+      
+      bikeSelect.disabled = false;
+      calcTotal(); // 金額リセット
+    }
+
     function checkUserStatus(userId) {
       document.getElementById('loading').innerHTML = "🔄 お客様情報を確認中...";
       
@@ -256,7 +311,6 @@
           document.getElementById('regName').value = u.regName;
           document.getElementById('regKana').value = u.regKana;
           document.getElementById('regPhone').value = u.regPhone;
-          // ★郵便番号をセット
           document.getElementById('zipcode').value = u.regZip || ""; 
           document.getElementById('regAddress').value = u.regAddress;
           
@@ -310,7 +364,7 @@
       const regName = document.getElementById('regName').value;
       const regKana = document.getElementById('regKana').value;
       const regPhone = document.getElementById('regPhone').value;
-      const regZip = document.getElementById('zipcode').value; // ★郵便番号取得
+      const regZip = document.getElementById('zipcode').value; 
       const regAddress = document.getElementById('regAddress').value;
       
       if(!regName || !regKana || !regPhone || !regAddress) {
@@ -318,7 +372,9 @@
       }
 
       const range = document.getElementById('dateRange').value;
+      const classSel = document.getElementById('classSelect'); // クラス取得
       const bikeSel = document.getElementById('bikeSelect');
+
       if(!range || bikeSel.value === "0") {
          alert("⚠️ バイクと期間を選択してください"); return;
       }
@@ -326,11 +382,12 @@
       document.getElementById('conf-name').innerText = regName;
       document.getElementById('conf-kana').innerText = regKana;
       document.getElementById('conf-phone').innerText = regPhone;
-      document.getElementById('conf-zip').innerText = regZip; // ★確認画面に表示
+      document.getElementById('conf-zip').innerText = regZip; 
       document.getElementById('conf-address').innerText = regAddress;
 
       document.getElementById('conf-date').innerText = range;
       document.getElementById('conf-days').innerText = document.getElementById('days-display').innerText;
+      document.getElementById('conf-class').innerText = classSel.options[classSel.selectedIndex].text; // クラス名表示
       document.getElementById('conf-bike').innerText = bikeSel.value;
       document.getElementById('conf-memo').innerText = document.getElementById('memo').value || "なし";
       
@@ -384,7 +441,7 @@
         regName: document.getElementById('conf-name').innerText,
         regKana: document.getElementById('conf-kana').innerText,
         regPhone: document.getElementById('conf-phone').innerText,
-        regZip: document.getElementById('conf-zip').innerText, // ★郵便番号を送信
+        regZip: document.getElementById('conf-zip').innerText, 
         regAddress: document.getElementById('conf-address').innerText,
         dateRange: document.getElementById('conf-date').innerText,
         totalDays: document.getElementById('conf-days').innerText,
