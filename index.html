@@ -9,9 +9,10 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
 
   <style>
-    /* --- CSSスタイル（デザインは変更なし） --- */
+    /* デザイン設定（変更なし） */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
@@ -52,7 +53,7 @@
     .btn-submit { width: 60%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: not-allowed; transition: 0.3s; }
     .btn-submit.active { background: linear-gradient(135deg, #06C755, #04b34b); box-shadow: 0 4px 10px rgba(6, 199, 85, 0.3); cursor: pointer; }
 
-    #input-screen { display: none; } /* 初期ロード中は隠す */
+    #input-screen { display: none; }
     #confirm-screen { display: none; }
     #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
     
@@ -63,7 +64,10 @@
 </head>
 <body>
 
-  <div id="loading">🚀 読み込み中...</div>
+  <div id="loading">
+    🚀 読み込み中...<br>
+    <span style="font-size:0.8rem; font-weight:normal;">(もし10秒以上このままなら、右下の緑ボタンを押してエラーを見てください)</span>
+  </div>
 
   <div id="input-screen">
     <div class="card">
@@ -165,13 +169,14 @@
   </div>
 
   <script>
-    // ★★★ 設定エリア (修正済み) ★★★
-    // ここにあなたの正しいGASのURLを入れました
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
-    const MY_LIFF_ID = "2008826232-lvGwqtl1";
-    // ★★★★★★★★★★★★★★★★★★★
+    // ★エラー調査ツールを起動
+    var vConsole = new VConsole();
 
-    // マスタデータ
+    // ★★★ 設定エリア (ここにURLを貼ってください) ★★★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec"; 
+    const MY_LIFF_ID = "2008826232-lvGwqtl1";
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★
+
     const masterData = {
       bikes: [
         { name: "原付スクーター", price: 3000 },
@@ -189,13 +194,17 @@
     let lineProfile = null;
 
     window.onload = function() {
-      // 1. LIFF初期化
+      console.log("画面読み込み開始");
+
+      // LIFF初期化
       liff.init({ liffId: MY_LIFF_ID })
         .then(() => {
+          console.log("LIFF初期化成功");
           if (!liff.isLoggedIn()) {
             liff.login();
           } else {
             liff.getProfile().then(profile => {
+              console.log("プロフィール取得成功");
               lineProfile = profile;
               document.getElementById('user-name').innerText = profile.displayName;
               document.getElementById('loading').style.display = 'none';
@@ -205,19 +214,21 @@
           }
         })
         .catch(err => {
-          // LIFF外で開いた場合のエラーハンドリング
+          console.error("LIFFエラー:", err);
+          // エラーが出ても画面だけは出す（PCテストなどのため）
           document.getElementById('loading').style.display = 'none';
           document.getElementById('input-screen').style.display = 'block';
           document.getElementById('price-bar').style.display = 'flex';
+          alert("LIFF Error: " + err);
         });
 
-      // 2. カレンダー
+      // カレンダー設定
       fpInstance = flatpickr("#dateRange", {
         mode: "range", minDate: "today", dateFormat: "Y-m-d", locale: "ja", disableMobile: "true",
         onClose: function() { calcTotal(); }
       });
 
-      // 3. 選択肢生成
+      // 選択肢の生成
       const bikeSelect = document.getElementById('bikeSelect');
       masterData.bikes.forEach(bike => {
         const option = document.createElement('option');
@@ -244,6 +255,7 @@
       });
     };
 
+    // 住所検索
     function searchAddress() {
       const zip = document.getElementById('zipcode').value;
       if (zip.length < 7) return alert("郵便番号は7桁で入力してください");
@@ -256,6 +268,7 @@
         });
     }
 
+    // 合計計算
     function calcTotal() {
       const dates = fpInstance.selectedDates;
       let days = 0;
@@ -276,6 +289,7 @@
       return total;
     }
 
+    // 確認画面へ
     function showConfirm() {
       const regName = document.getElementById('regName').value;
       const regKana = document.getElementById('regKana').value;
@@ -340,6 +354,7 @@
       }
     }
 
+    // GAS送信
     function sendToGas() {
       const btn = document.getElementById('finalSubmitBtn');
       btn.disabled = true;
@@ -360,7 +375,6 @@
         totalPrice: document.getElementById('conf-price').innerText
       };
 
-      // ★ここが修正されています
       fetch(GAS_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -370,6 +384,7 @@
         alert("ご予約ありがとうございます！\n予約完了しました。");
         liff.closeWindow(); 
       }).catch(err => {
+        console.error(err);
         alert("送信エラー: " + err);
         btn.disabled = false;
         btn.innerText = "予約確定";
