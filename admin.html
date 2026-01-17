@@ -42,10 +42,12 @@
     
     /* モーダル */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; }
+    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
     .form-group input, .form-group select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+    .flex-inputs { display: flex; gap: 15px; }
+    .flex-inputs .form-group { flex: 1; }
 
     /* 帳票スタイル (印刷時) */
     .sheet-container { background: white; width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; box-shadow: 0 0 15px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -65,7 +67,7 @@
       .sheet-input { background: transparent !important; border-bottom: none !important; }
       .view-section { display: none; }
       #sheet-view { display: block !important; }
-      .modal { display: none !important; } /* モーダルは印刷しない */
+      .modal { display: none !important; }
     }
   </style>
 </head>
@@ -99,8 +101,9 @@
     <div id="vehicles" class="view-section">
       <h2 class="page-title">車両台帳・メンテナンス管理</h2>
       <div class="card">
+        <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">ここでは車両の詳細情報（距離や日付）を編集できます。新規追加は「マスタ設定」から行ってください。</p>
         <table>
-          <thead><tr><th>ID</th><th>車両名 / No.</th><th>距離</th><th>自賠責</th><th>車検</th><th>オイル</th><th>状態</th></tr></thead>
+          <thead><tr><th>ID</th><th>車両名 / No.</th><th>距離</th><th>自賠責</th><th>車検</th><th>オイル</th><th>状態</th><th>操作</th></tr></thead>
           <tbody id="vehicle-list-body"></tbody>
         </table>
       </div>
@@ -117,7 +120,7 @@
         <div style="text-align:right; margin-bottom:10px;">
           <button class="btn" onclick="openMasterModal()">＋ 新規バイク追加</button>
         </div>
-        <p style="font-size:0.9rem; color:#666;">※ここで編集した内容は、お客様の予約画面に即時反映されます。</p>
+        <p style="font-size:0.9rem; color:#666;">※ここで新規追加すると、車両台帳にも自動登録されます。</p>
         <table>
           <thead><tr><th>カテゴリー</th><th>バイク名</th><th>料金 (円/日)</th><th>操作</th></tr></thead>
           <tbody id="master-list-body"></tbody>
@@ -135,62 +138,34 @@
         <h1 class="sheet-title">レンタルバイク 貸渡証</h1>
         <div style="text-align: right; font-size: 9pt;">受付No.：<span id="sheet-id" style="font-weight:bold;"></span></div>
         <input type="hidden" id="sheet-rowIndex">
-        
         <div class="sheet-section">1. 契約基本情報</div>
         <div class="sheet-box">
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">車種名</span><input type="text" class="sheet-input" id="sheet-bike"></div>
-            <div class="sheet-col"><span class="sheet-label">期間</span><input type="text" class="sheet-input" id="sheet-dateRange"></div>
-          </div>
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">出発時(km)</span><input type="number" class="sheet-input" id="sheet-startKm"></div>
-            <div class="sheet-col"><span class="sheet-label">返却時(km)</span><input type="number" class="sheet-input" id="sheet-endKm"></div>
-            <div class="sheet-col"><span class="sheet-label">料金</span><input type="text" class="sheet-input" id="sheet-price"></div>
-          </div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">車種名</span><input type="text" class="sheet-input" id="sheet-bike"></div><div class="sheet-col"><span class="sheet-label">期間</span><input type="text" class="sheet-input" id="sheet-dateRange"></div></div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">出発時(km)</span><input type="number" class="sheet-input" id="sheet-startKm"></div><div class="sheet-col"><span class="sheet-label">返却時(km)</span><input type="number" class="sheet-input" id="sheet-endKm"></div><div class="sheet-col"><span class="sheet-label">料金</span><input type="text" class="sheet-input" id="sheet-price"></div></div>
         </div>
-        
         <div class="sheet-section">2. ご利用者様情報</div>
         <div class="sheet-box">
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">氏名</span><input type="text" class="sheet-input" id="sheet-name"></div>
-            <div class="sheet-col"><span class="sheet-label">電話番号</span><input type="text" class="sheet-input" id="sheet-phone"></div>
-          </div>
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">住所</span><input type="text" class="sheet-input" id="sheet-address"></div>
-          </div>
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">免許証番号</span><input type="text" class="sheet-input" id="sheet-license"></div>
-          </div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">氏名</span><input type="text" class="sheet-input" id="sheet-name"></div><div class="sheet-col"><span class="sheet-label">電話番号</span><input type="text" class="sheet-input" id="sheet-phone"></div></div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">住所</span><input type="text" class="sheet-input" id="sheet-address"></div></div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">免許証番号</span><input type="text" class="sheet-input" id="sheet-license"></div></div>
         </div>
-
         <div class="sheet-section" style="background:#0056b3;">3. 保険・補償プラン</div>
         <div class="sheet-box" style="background:#fff5f5; border:2px solid #d00;">
-          <div style="margin-top:5px;">
-            <label style="margin-right:20px;"><input type="checkbox"> 免責補償制度 (CDW) 加入</label>
-            <label><input type="checkbox"> 未加入</label>
-          </div>
-          <hr style="border-top:1px dashed #d00;">
-          <div><label><input type="checkbox"> NOC規定に同意します</label></div>
+          <div style="margin-top:5px;"><label style="margin-right:20px;"><input type="checkbox"> 免責補償制度 (CDW) 加入</label><label><input type="checkbox"> 未加入</label></div>
+          <hr style="border-top:1px dashed #d00;"><div><label><input type="checkbox"> NOC規定に同意します</label></div>
         </div>
-
         <div class="sheet-section">4. 車両状態チェック</div>
         <div class="sheet-box">
-          <div class="sheet-row">
-            <div class="sheet-col"><span class="sheet-label">燃料残量</span><input type="text" class="sheet-input" value="出発： 満タン / 返却：＿＿＿＿"></div>
-            <div class="sheet-col"><span class="sheet-label">傷チェック</span><input type="text" class="sheet-input"></div>
-          </div>
+          <div class="sheet-row"><div class="sheet-col"><span class="sheet-label">燃料残量</span><input type="text" class="sheet-input" value="出発： 満タン / 返却：＿＿＿＿"></div><div class="sheet-col"><span class="sheet-label">傷チェック</span><input type="text" class="sheet-input"></div></div>
         </div>
-        
-        <div style="margin-top:20px; text-align:right; border-top:1px dashed #ccc; padding-top:20px;">
-          ご署名：__________________________________________
-        </div>
+        <div style="margin-top:20px; text-align:right; border-top:1px dashed #ccc; padding-top:20px;">ご署名：__________________________________________</div>
       </div>
     </div>
   </div>
 
   <div id="masterModal" class="modal">
     <div class="modal-content">
-      <h3>バイク情報の編集</h3>
+      <h3 id="master-title">バイク情報の編集</h3>
       <input type="hidden" id="master-rowIndex">
       <div class="form-group">
         <label>カテゴリー</label>
@@ -208,9 +183,53 @@
         <label>料金 (1日あたり・円)</label>
         <input type="number" id="master-price" placeholder="例：3000">
       </div>
+      
+      <div id="master-details" style="display:none; background:#f9f9f9; padding:10px; border-radius:5px; margin-top:10px;">
+        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:10px; color:#06C755;">▼ 車両管理情報の初期登録</div>
+        <div class="form-group"><label>ナンバープレート</label><input type="text" id="new-plate"></div>
+        <div class="flex-inputs">
+          <div class="form-group"><label>現在走行距離(km)</label><input type="number" id="new-km" value="0"></div>
+          <div class="form-group"><label>次回オイル(km)</label><input type="number" id="new-oil" value="3000"></div>
+        </div>
+        <div class="flex-inputs">
+          <div class="form-group"><label>自賠責満了日</label><input type="date" id="new-insurance"></div>
+          <div class="form-group"><label>車検満了日</label><input type="date" id="new-inspection"></div>
+        </div>
+      </div>
+
       <div style="text-align:right; margin-top:20px;">
-        <button class="btn" style="background:#999;" onclick="closeMasterModal()">キャンセル</button>
+        <button class="btn" style="background:#999;" onclick="document.getElementById('masterModal').style.display='none'">キャンセル</button>
         <button class="btn" onclick="saveMaster()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vehicleModal" class="modal">
+    <div class="modal-content">
+      <h3>車両情報の更新</h3>
+      <input type="hidden" id="vehicle-id">
+      <div style="margin-bottom:15px; font-weight:bold; font-size:1.1rem;" id="vehicle-name-display"></div>
+      
+      <div class="form-group"><label>ナンバープレート</label><input type="text" id="v-plate"></div>
+      <div class="flex-inputs">
+        <div class="form-group"><label>現在走行距離(km)</label><input type="number" id="v-km"></div>
+        <div class="form-group"><label>次回オイル交換(km)</label><input type="number" id="v-oil"></div>
+      </div>
+      <div class="flex-inputs">
+        <div class="form-group"><label>自賠責満了日</label><input type="date" id="v-insurance"></div>
+        <div class="form-group"><label>車検満了日</label><input type="date" id="v-inspection"></div>
+      </div>
+      <div class="form-group">
+        <label>貸出ステータス</label>
+        <select id="v-status">
+          <option value="active">貸出可</option>
+          <option value="maintenance">メンテナンス中</option>
+        </select>
+      </div>
+
+      <div style="text-align:right; margin-top:20px;">
+        <button class="btn" style="background:#999;" onclick="document.getElementById('vehicleModal').style.display='none'">キャンセル</button>
+        <button class="btn" onclick="saveVehicle()">更新する</button>
       </div>
     </div>
   </div>
@@ -238,7 +257,8 @@
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(viewId).classList.add('active');
       if(viewId === 'calendar') setTimeout(() => { calendar.render(); }, 100);
-      if(viewId === 'settings') fetchMasterList(); // 設定タブを開いたらリスト更新
+      if(viewId === 'settings') fetchMasterList();
+      if(viewId === 'vehicles') fetchData();
     }
 
     function fetchData() {
@@ -260,84 +280,134 @@
       });
     }
 
-    // --- マスタ管理機能 ---
-    function fetchMasterList() {
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_list" }) })
-      .then(res => res.json())
-      .then(data => {
-        if(data.result === 'success') renderMasterList(data.data);
-      });
-    }
-
-    function renderMasterList(list) {
-      const tbody = document.getElementById('master-list-body');
+    // --- 車両管理 ---
+    function renderVehicleList(vehicles) {
+      const tbody = document.getElementById('vehicle-list-body');
       let html = "";
-      list.forEach(m => {
-        html += `
-          <tr>
-            <td>${m.category}</td>
-            <td>${m.name}</td>
-            <td>¥${m.price.toLocaleString()}</td>
-            <td>
-              <button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex}, '${m.category}', '${m.name}', ${m.price})">編集</button>
-              <button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button>
-            </td>
-          </tr>
-        `;
+      const today = new Date();
+      const warningLimit = new Date(); warningLimit.setDate(today.getDate() + 30); 
+
+      vehicles.forEach(v => {
+        let insClass = "text-success", inspClass = "text-success", oilClass = "text-success";
+        if(v.insurance !== "-") { const d = new Date(v.insurance); if(d < today) insClass = "text-danger"; else if(d < warningLimit) insClass = "text-warning"; }
+        if(v.inspection !== "-") { const d = new Date(v.inspection); if(d < today) inspClass = "text-danger"; else if(d < warningLimit) inspClass = "text-warning"; }
+        if(parseInt(v.km) >= parseInt(v.nextOil)) oilClass = "text-danger"; else if(parseInt(v.km) >= parseInt(v.nextOil) - 500) oilClass = "text-warning";
+        
+        let badge = v.status === 'active' ? '<span class="badge bg-green">可</span>' : '<span class="badge bg-red">不可</span>';
+
+        // データをJSON文字列として保持（編集用）
+        const vJson = JSON.stringify(v).replace(/"/g, '&quot;');
+
+        html += `<tr><td>${v.id}</td><td><b>${v.name}</b><br><small>${v.plate}</small></td>
+        <td>${parseInt(v.km).toLocaleString()} km</td><td class="${insClass}">${v.insurance}</td><td class="${inspClass}">${v.inspection}</td>
+        <td class="${oilClass}">次回:${parseInt(v.nextOil).toLocaleString()}</td><td>${badge}</td>
+        <td><button class="btn btn-sm" onclick="openVehicleModal('${vJson}')">編集</button></td></tr>`;
       });
       tbody.innerHTML = html;
     }
 
+    function openVehicleModal(jsonStr) {
+      const v = JSON.parse(jsonStr);
+      document.getElementById('vehicle-id').value = v.id;
+      document.getElementById('vehicle-name-display').innerText = v.name;
+      document.getElementById('v-plate').value = v.plate;
+      document.getElementById('v-km').value = v.km;
+      document.getElementById('v-oil').value = v.nextOil;
+      
+      // 日付フォーマット変換 (yyyy/MM/dd -> yyyy-MM-dd)
+      const toInputDate = (str) => {
+        if(!str || str === '-') return '';
+        return str.replace(/\//g, '-');
+      };
+      document.getElementById('v-insurance').value = toInputDate(v.insurance);
+      document.getElementById('v-inspection').value = toInputDate(v.inspection);
+      document.getElementById('v-status').value = v.status;
+
+      document.getElementById('vehicleModal').style.display = 'flex';
+    }
+
+    function saveVehicle() {
+      const id = document.getElementById('vehicle-id').value;
+      const postData = {
+        action: "update_vehicle", id: id,
+        plate: document.getElementById('v-plate').value,
+        km: document.getElementById('v-km').value,
+        nextOil: document.getElementById('v-oil').value,
+        insurance: document.getElementById('v-insurance').value,
+        inspection: document.getElementById('v-inspection').value,
+        status: document.getElementById('v-status').value
+      };
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(postData) }).then(res => res.json()).then(data => {
+        if(data.result === 'success') { alert("更新しました"); document.getElementById('vehicleModal').style.display='none'; fetchData(); }
+        else { alert("エラー: " + data.message); }
+      });
+    }
+
+    // --- マスタ管理 ---
+    function fetchMasterList() {
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_list" }) }).then(res => res.json()).then(data => {
+        if(data.result === 'success') renderMasterList(data.data);
+      });
+    }
+    function renderMasterList(list) {
+      const tbody = document.getElementById('master-list-body');
+      let html = "";
+      list.forEach(m => {
+        html += `<tr><td>${m.category}</td><td>${m.name}</td><td>¥${m.price.toLocaleString()}</td>
+        <td><button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex}, '${m.category}', '${m.name}', ${m.price})">編集</button>
+        <button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button></td></tr>`;
+      });
+      tbody.innerHTML = html;
+    }
     function openMasterModal(rowIndex = "", cat = "", name = "", price = "") {
       document.getElementById('master-rowIndex').value = rowIndex;
       if(cat) document.getElementById('master-category').value = cat;
       document.getElementById('master-name').value = name;
       document.getElementById('master-price').value = price;
+      
+      // 新規作成時のみ詳細入力を表示
+      if(!rowIndex) {
+        document.getElementById('master-title').innerText = "新規バイク登録";
+        document.getElementById('master-details').style.display = "block";
+      } else {
+        document.getElementById('master-title').innerText = "バイク情報の編集";
+        document.getElementById('master-details').style.display = "none";
+      }
       document.getElementById('masterModal').style.display = 'flex';
     }
-    
-    function closeMasterModal() {
-      document.getElementById('masterModal').style.display = 'none';
-    }
-
     function saveMaster() {
       const rowIndex = document.getElementById('master-rowIndex').value;
       const cat = document.getElementById('master-category').value;
       const name = document.getElementById('master-name').value;
       const price = document.getElementById('master-price').value;
-
       if(!name || !price) return alert("入力してください");
 
       const action = rowIndex ? "edit_master" : "add_master";
       const postData = { action: action, rowIndex: rowIndex, category: cat, name: name, price: price };
+      
+      // 新規時は詳細情報も含める
+      if(!rowIndex) {
+        postData.plate = document.getElementById('new-plate').value;
+        postData.km = document.getElementById('new-km').value;
+        postData.nextOil = document.getElementById('new-oil').value;
+        postData.insurance = document.getElementById('new-insurance').value;
+        postData.inspection = document.getElementById('new-inspection').value;
+      }
 
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(postData) })
-      .then(res => res.json())
-      .then(data => {
-        if(data.result === 'success') {
-          closeMasterModal();
-          fetchMasterList();
-          alert("保存しました");
-        } else {
-          alert("エラーが発生しました");
-        }
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(postData) }).then(res => res.json()).then(data => {
+        if(data.result === 'success') { document.getElementById('masterModal').style.display='none'; fetchMasterList(); alert("保存しました"); }
+        else { alert("エラーが発生しました"); }
       });
     }
-
     function deleteMaster(rowIndex) {
-      if(!confirm("本当に削除しますか？")) return;
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "delete_master", rowIndex: rowIndex }) })
-      .then(res => res.json())
-      .then(data => {
-        if(data.result === 'success') {
-          fetchMasterList();
-        } else {
-          alert("削除エラー");
-        }
+      if(!confirm("削除しますか？")) return;
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "delete_master", rowIndex: rowIndex }) }).then(res => res.json()).then(data => {
+        if(data.result === 'success') fetchMasterList();
+        else alert("削除エラー");
       });
     }
 
-    // --- 以下、既存の機能 ---
+    // --- その他 ---
     function renderBookingList(list) {
       const tbody = document.getElementById('booking-list-body');
       let html = "";
@@ -347,53 +417,15 @@
       });
       tbody.innerHTML = html;
     }
-
     function updateCalendar(bookings) {
       calendar.removeAllEvents();
       bookings.forEach(b => {
         const parts = b.dateRange.split(' 〜 ');
         if(parts.length === 2) {
-          calendar.addEvent({
-            title: b.bike + ' (' + b.name + ')',
-            start: new Date(parts[0]),
-            end: new Date(parts[1]),
-            color: '#06C755'
-          });
+          calendar.addEvent({ title: b.bike + ' (' + b.name + ')', start: new Date(parts[0]), end: new Date(parts[1]), color: '#06C755' });
         }
       });
     }
-
-    function renderVehicleList(vehicles) {
-      const tbody = document.getElementById('vehicle-list-body');
-      let html = "";
-      const today = new Date();
-      const warningLimit = new Date();
-      warningLimit.setDate(today.getDate() + 30); 
-
-      vehicles.forEach(v => {
-        let insClass = "text-success";
-        if(v.insurance !== "-") {
-          const d = new Date(v.insurance);
-          if(d < today) insClass = "text-danger"; else if(d < warningLimit) insClass = "text-warning";
-        }
-        let inspClass = "text-success";
-        if(v.inspection !== "-") {
-          const d = new Date(v.inspection);
-          if(d < today) inspClass = "text-danger"; else if(d < warningLimit) inspClass = "text-warning";
-        }
-        let oilClass = "text-success";
-        const km = parseInt(v.km);
-        const next = parseInt(v.nextOil);
-        if(km >= next) oilClass = "text-danger"; else if(km >= next - 500) oilClass = "text-warning";
-        let badge = v.status === 'active' ? '<span class="badge bg-green">可</span>' : '<span class="badge bg-red">不可</span>';
-
-        html += `<tr><td>${v.id}</td><td><b>${v.name}</b><br><small>${v.plate}</small></td>
-        <td>${km.toLocaleString()} km</td><td class="${insClass}">${v.insurance}</td><td class="${inspClass}">${v.inspection}</td>
-        <td class="${oilClass}">次回:${next.toLocaleString()}</td><td>${badge}</td></tr>`;
-      });
-      tbody.innerHTML = html;
-    }
-
     function openSheet(bookingId) {
       const booking = currentBookings.find(b => b.id === bookingId);
       if(!booking) return;
@@ -410,26 +442,11 @@
       document.getElementById('sheet-endKm').value = booking.endKm || "";
       switchView('sheet-view');
     }
-
     function saveSheetData() {
-      const btn = document.getElementById('btn-save');
-      btn.innerText = "通信中...";
-      btn.disabled = true;
-      const newData = {
-        action: "update_booking",
-        rowIndex: document.getElementById('sheet-rowIndex').value,
-        name: document.getElementById('sheet-name').value,
-        phone: document.getElementById('sheet-phone').value,
-        address: document.getElementById('sheet-address').value,
-        license: document.getElementById('sheet-license').value,
-        startKm: document.getElementById('sheet-startKm').value,
-        endKm: document.getElementById('sheet-endKm').value
-      };
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(newData) })
-      .then(res => res.json())
-      .then(data => {
-        btn.innerText = "💾 保存";
-        btn.disabled = false;
+      const btn = document.getElementById('btn-save'); btn.innerText = "通信中..."; btn.disabled = true;
+      const newData = { action: "update_booking", rowIndex: document.getElementById('sheet-rowIndex').value, name: document.getElementById('sheet-name').value, phone: document.getElementById('sheet-phone').value, address: document.getElementById('sheet-address').value, license: document.getElementById('sheet-license').value, startKm: document.getElementById('sheet-startKm').value, endKm: document.getElementById('sheet-endKm').value };
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(newData) }).then(res => res.json()).then(data => {
+        btn.innerText = "💾 保存"; btn.disabled = false;
         if(data.result === 'success') { alert("保存しました！"); fetchData(); }
         else { alert("エラー: " + data.message); }
       });
