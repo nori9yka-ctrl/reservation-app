@@ -9,7 +9,7 @@
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* 基本CSS */
+    /* CSSスタイル */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
@@ -42,24 +42,31 @@
     .btn-submit { width: 60%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: not-allowed; transition: 0.3s; }
     .btn-submit.active { background: linear-gradient(135deg, #06C755, #04b34b); box-shadow: 0 4px 10px rgba(6, 199, 85, 0.3); cursor: pointer; }
     .btn-submit.sending { background: #555 !important; cursor: wait !important; transform: scale(0.98); font-size: 1.1rem; }
-    
-    /* ★画像表示エリア */
-    #bike-image-container { text-align: center; margin-bottom: 15px; display: none; }
-    #bike-image { max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #eee; }
-    
-    /* ★ヘルプアイコン */
-    .help-icon { color: #06C755; cursor: pointer; margin-left: 5px; font-size: 1rem; }
-
     #input-screen { display: none; } #confirm-screen { display: none; }
     #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
     .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
     .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
     .submit-btn-mini { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; }
     .time-container { display: flex; gap: 10px; } .time-group { flex: 1; } .time-note { font-size: 0.75rem; color: #d00; margin-top: 4px; }
+    
+    /* 画像エリア */
+    #bike-image-container { text-align: center; margin-bottom: 15px; display: none; }
+    #bike-image { max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #eee; object-fit: cover; }
+    
+    /* 説明アイコン */
+    .help-icon { color: #06C755; cursor: pointer; margin-left: 5px; font-size: 1rem; }
+
+    /* ★ カスタムモーダル (アラートの代わり) ★ */
+    #descModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
+    .desc-content { background: white; padding: 25px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .desc-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; color: #06C755; }
+    .desc-text { font-size: 0.95rem; line-height: 1.5; color: #333; margin-bottom: 20px; white-space: pre-wrap; }
+    .desc-close { background: #333; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div id="loading">🚀 読み込み中...</div>
+  
   <div id="input-screen">
     <div class="card">
       <div style="text-align:center; margin-bottom:10px;">ようこそ <span id="user-name" style="font-weight:bold;">ゲスト</span> さん</div>
@@ -119,6 +126,14 @@
   </div>
   <div class="price-bar" id="price-bar"><div><div style="font-size:0.8rem; color:#555;">お支払い予定額</div><div class="total-price" id="totalPriceDisplay">¥0</div></div><button class="submit-btn-mini" onclick="showConfirm()">確認へ進む</button></div>
 
+  <div id="descModal">
+    <div class="desc-content">
+      <div class="desc-title" id="desc-title"></div>
+      <div class="desc-text" id="desc-text"></div>
+      <button class="desc-close" onclick="document.getElementById('descModal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
     const MY_LIFF_ID = "2008826232-lvGwqtl1";
@@ -146,50 +161,22 @@
       generateTimeOptions('startTime', 9, 18); generateTimeOptions('endTime', 0, 23);
     };
 
-    function fetchMasterData() {
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_data" }) }).then(r=>r.json()).then(d=>{
-        if (d.result === 'success') { 
-          masterData.categories = d.categories; 
-          masterData.options = d.options; 
-          initClassSelect(); initOptionSelect(); 
-          fetchAllReservations();
-        }
-      });
-    }
-
-    function fetchAllReservations() {
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_reserved_ranges" }) }).then(r=>r.json()).then(d=>{
-        if(d.result === 'success') {
-          allReservations = d.data; 
-          document.getElementById('loading').style.display = 'none'; 
-          document.getElementById('input-screen').style.display = 'block'; 
-          document.getElementById('price-bar').style.display = 'flex'; 
-        }
-      });
-    }
-
+    function fetchMasterData() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_data" }) }).then(r=>r.json()).then(d=>{ if (d.result === 'success') { masterData.categories = d.categories; masterData.options = d.options; initClassSelect(); initOptionSelect(); fetchAllReservations(); } }); }
+    function fetchAllReservations() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_reserved_ranges" }) }).then(r=>r.json()).then(d=>{ if(d.result === 'success') { allReservations = d.data; document.getElementById('loading').style.display = 'none'; document.getElementById('input-screen').style.display = 'block'; document.getElementById('price-bar').style.display = 'flex'; } }); }
     function safeParseInt(val) { if (!val) return 0; const num = parseInt(val); return isNaN(num) ? 0 : num; }
     function calculatePrice(rates, hours) {
       const p4 = safeParseInt(rates.p4); const p8 = safeParseInt(rates.p8); const p24 = safeParseInt(rates.p24); const pAdd = safeParseInt(rates.pAdd);
       if (hours <= 4) return p4; else if (hours <= 8) return p8; else if (hours <= 24) return p24; else { const extraDays = Math.ceil((hours - 24) / 24); return p24 + (pAdd * extraDays); }
     }
 
-    // ★画像表示ロジック
     function showBikeImage() {
       const sel = document.getElementById('bikeSelect');
       const imgContainer = document.getElementById('bike-image-container');
       const img = document.getElementById('bike-image');
       if (sel.value !== "0") {
         const url = sel.options[sel.selectedIndex].dataset.image;
-        if (url && url !== "") {
-          img.src = url;
-          imgContainer.style.display = "block";
-        } else {
-          imgContainer.style.display = "none";
-        }
-      } else {
-        imgContainer.style.display = "none";
-      }
+        if (url && url !== "") { img.src = url; imgContainer.style.display = "block"; } else { imgContainer.style.display = "none"; }
+      } else { imgContainer.style.display = "none"; }
     }
 
     function calcTotal() {
@@ -198,7 +185,6 @@
       const sH = parseInt(document.getElementById('startTime').value); const eH = parseInt(document.getElementById('endTime').value);
       const start = new Date(dates[0]); start.setHours(sH);
       const end = new Date(dates.length > 1 ? dates[1] : dates[0]); end.setHours(eH);
-      
       let diffMs = end - start;
       if (diffMs <= 0) { document.getElementById('days-display').innerText = "エラー: 日時を確認してください"; document.getElementById('totalPriceDisplay').innerText = "¥0"; return; }
       const diffHours = diffMs / (1000 * 60 * 60);
@@ -206,7 +192,6 @@
 
       const bikeSel = document.getElementById('bikeSelect');
       let bikeTotal = 0; let planName = "";
-
       if (bikeSel.value !== "0") {
         const bRates = bikeSel.options[bikeSel.selectedIndex].dataset;
         bikeTotal = calculatePrice(bRates, diffHours);
@@ -216,10 +201,7 @@
       let optionTotal = 0;
       document.querySelectorAll('.option-select').forEach(sel => {
         const qty = parseInt(sel.value);
-        if(qty > 0) {
-          const oRates = sel.dataset;
-          optionTotal += calculatePrice(oRates, diffHours) * qty;
-        }
+        if(qty > 0) { const oRates = sel.dataset; optionTotal += calculatePrice(oRates, diffHours) * qty; }
       });
 
       const total = bikeTotal + optionTotal;
@@ -229,27 +211,28 @@
       return total;
     }
 
-    // ★オプション生成 (説明アイコン付き)
+    // ★カスタムモーダル表示
+    function showDesc(title, text) {
+      document.getElementById('desc-title').innerText = title;
+      document.getElementById('desc-text').innerText = text;
+      document.getElementById('descModal').style.display = 'flex';
+    }
+
     function initOptionSelect() { 
       const area = document.getElementById('optionArea'); area.innerHTML = ""; 
       masterData.options.forEach(opt => { 
         const div = document.createElement('div'); div.className = 'option-row'; 
         const priceDisplay = safeParseInt(opt.p24).toLocaleString();
-        
-        // 説明文があれば ? アイコンを表示
         let helpIcon = "";
         if(opt.desc && opt.desc !== "") {
-          helpIcon = `<span class="help-icon" onclick="alert('${opt.name}:\\n${opt.desc}')">(?)</span>`;
+          // alert() ではなく showDesc() を呼ぶ
+          helpIcon = `<span class="help-icon" onclick="showDesc('${opt.name}', '${opt.desc.replace(/'/g, "\\'")}')">(?)</span>`;
         }
-
         div.innerHTML = `
           <div class="option-label">${opt.name} ${helpIcon}</div>
           <div class="option-price">目安: +¥${priceDisplay}/日</div>
           <select class="option-select" 
-            data-p4="${safeParseInt(opt.p4)}" 
-            data-p8="${safeParseInt(opt.p8)}" 
-            data-p24="${safeParseInt(opt.p24)}" 
-            data-p-add="${safeParseInt(opt.pAdd)}" 
+            data-p4="${safeParseInt(opt.p4)}" data-p8="${safeParseInt(opt.p8)}" data-p24="${safeParseInt(opt.p24)}" data-p-add="${safeParseInt(opt.pAdd)}" 
             data-name="${opt.name}" onchange="calcTotal()">
             <option value="0">なし</option><option value="1">1</option><option value="2">2</option>
           </select>`; 
@@ -265,13 +248,11 @@
       bikes.forEach(b => { 
         const o = document.createElement('option'); o.value = b.name; 
         o.dataset.p4 = b.p4; o.dataset.p8 = b.p8; o.dataset.p24 = b.p24; o.dataset.pAdd = b.pAdd; 
-        // ★画像URLをdatasetに保存
         o.dataset.image = b.image || "";
         if (busyList.includes(b.name)) { o.disabled = true; o.textContent = `❌ ${b.name} (貸出中)`; } else { o.textContent = `${b.name}`; } bs.appendChild(o); 
       }); 
       bs.disabled = false; if(currentVal && !busyList.includes(currentVal)) { bs.value = currentVal; } 
-      showBikeImage(); // リスト更新時に画像も更新
-      calcTotal(); 
+      showBikeImage(); calcTotal(); 
     }
     function checkAvailability() {
       const dates = fpInstance.selectedDates; if (dates.length === 0) return;
