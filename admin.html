@@ -6,7 +6,7 @@
   <title>レンタルバイク管理システム</title>
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
   <style>
-    /* CSSは前回と同じ */
+    /* 基本CSS */
     body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f9; color: #333; display: flex; height: 100vh; }
     .sidebar { width: 250px; background-color: #343a40; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; background-color: #06C755; text-align: center; }
@@ -26,12 +26,12 @@
     .view-section { display: none; } .view-section.active { display: block; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
     .modal-content { background: white; padding: 30px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .modal h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
     .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
     .form-group input, .form-group select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
     .flex-inputs { display: flex; gap: 15px; } .flex-inputs .form-group { flex: 1; }
     #master-details { display: none; background-color: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 20px; }
     .detail-title { font-weight: bold; color: #856404; margin-bottom: 10px; border-bottom: 1px dashed #856404; padding-bottom: 5px; font-size: 1.1rem; }
+    
     /* 貸渡証CSS */
     .sheet-wrapper { background: #555; padding: 20px; display: flex; justify-content: center; }
     .sheet-container { background: white; width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; line-height: 1.3; color: #000; }
@@ -68,18 +68,28 @@
   <div class="main">
     <div id="bookings" class="view-section active">
       <h2 class="page-title">全予約リスト</h2>
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-          <input type="text" placeholder="名前や予約IDで検索..." style="padding:8px; border:1px solid #ddd; width:300px;">
-          <button class="btn" onclick="fetchData()">🔄 最新情報に更新</button>
-        </div>
-        <table class="admin-table"><thead><tr><th>日時</th><th>名前</th><th>バイク</th><th>期間</th><th>操作</th></tr></thead><tbody id="booking-list-body"></tbody></table>
-      </div>
+      <div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><input type="text" placeholder="名前や予約IDで検索..." style="padding:8px; border:1px solid #ddd; width:300px;"><button class="btn" onclick="fetchData()">🔄 最新情報に更新</button></div><table class="admin-table"><thead><tr><th>日時</th><th>名前</th><th>バイク</th><th>期間</th><th>操作</th></tr></thead><tbody id="booking-list-body"></tbody></table></div>
     </div>
     <div id="vehicles" class="view-section"><h2 class="page-title">車両台帳・メンテナンス</h2><div class="card"><table class="admin-table"><thead><tr><th>ID</th><th>車両名/No.</th><th>距離</th><th>自賠責</th><th>車検</th><th>オイル</th><th>状態</th><th>操作</th></tr></thead><tbody id="vehicle-list-body"></tbody></table></div></div>
     <div id="calendar" class="view-section"><h2 class="page-title">予約カレンダー</h2><div class="card"><div id='calendar-el'></div></div></div>
     <div id="settings" class="view-section"><h2 class="page-title">バイク登録・料金設定</h2><div class="card"><div style="text-align:right; margin-bottom:10px;"><button class="btn" onclick="openMasterModal()">＋ 新規バイク登録</button></div><table class="admin-table"><thead><tr><th>カテゴリ</th><th>バイク名</th><th>適用料金クラス</th><th>操作</th></tr></thead><tbody id="master-list-body"></tbody></table></div></div>
-    <div id="options" class="view-section"><h2 class="page-title">オプション品管理</h2><div class="card"><div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;"><input type="text" id="opt-name" placeholder="オプション名 (例: ヘルメット)" style="flex:2;"><input type="number" id="opt-price" placeholder="料金 (円/日)" style="flex:1;"><button class="btn" onclick="addOption()">＋ 追加</button></div><table class="admin-table"><thead><tr><th>オプション名</th><th>料金 (円/日)</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table></div></div>
+    
+    <div id="options" class="view-section">
+      <h2 class="page-title">オプション品管理</h2>
+      <div class="card">
+        <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px;">
+          <div class="form-group"><label>オプション名</label><input type="text" id="opt-name" placeholder="例: ヘルメット"></div>
+          <div class="flex-inputs">
+            <div class="form-group"><label>4時間</label><input type="number" id="opt-p4"></div>
+            <div class="form-group"><label>8時間</label><input type="number" id="opt-p8"></div>
+            <div class="form-group"><label>24時間</label><input type="number" id="opt-p24"></div>
+            <div class="form-group"><label>以降1日</label><input type="number" id="opt-pAdd"></div>
+          </div>
+          <div style="text-align:right;"><button class="btn" onclick="addOption()">＋ 追加</button></div>
+        </div>
+        <table class="admin-table"><thead><tr><th>オプション名</th><th>24時間料金</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table>
+      </div>
+    </div>
 
     <div id="sheet-view" class="view-section">
       <div class="no-print" style="position:sticky; top:0; z-index:100; background:#333; padding:10px; text-align:center; color:white;">
@@ -100,7 +110,14 @@
                     <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px; font-size: 8.5pt;"><div class="shop-stamp">印</div><strong>貸渡人：[あなたの店名]</strong><br>登録番号：Txxxxxxxxxxxxx<br>住所：[店舗住所]<br>電話：[電話番号]</div>
                 </div>
                 <div class="col-right">
-                    <div><div class="box-title">ご利用車両・日時</div><table class="sheet-table"><tr><th style="width:20%;">車種名</th><td><input type="text" class="sheet-input" id="sheet-bike"></td><th style="width:20%;">登録No.</th><td><input type="text" class="sheet-input" id="sheet-plate"></td></tr></table><table class="sheet-table" style="margin-top:-1px;"><tr><th style="width:20%;">貸渡日時</th><td><input type="text" class="sheet-input" id="sheet-start-date"></td></tr><tr><th>返却日時</th><td><input type="text" class="sheet-input" id="sheet-end-date"></td></tr></table></div>
+                    <div>
+                        <div class="box-title">ご利用車両・日時</div>
+                        <table class="sheet-table">
+                            <tr><th style="width:20%;">車種名</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-bike"></td></tr>
+                            <tr><th style="width:20%;">登録No.</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-plate"></td></tr>
+                        </table>
+                        <table class="sheet-table" style="margin-top:-1px;"><tr><th style="width:20%;">貸渡日時</th><td><input type="text" class="sheet-input" id="sheet-start-date"></td></tr><tr><th>返却日時</th><td><input type="text" class="sheet-input" id="sheet-end-date"></td></tr></table>
+                    </div>
                     <div><div class="box-title">保険・補償内容（約款第27条）</div><table class="sheet-table"><tr><th width="20%">対人補償</th><td>無制限</td><th width="20%">対物補償</th><td>無制限 <span style="font-size:7.5pt;">(免責5万)</span></td></tr><tr><th>人身傷害</th><td>1名500万<br><span style="color:#d00;font-size:7pt;">(125cc以下対象外)</span></td><th>車両保険</th><td style="color:#d00;font-weight:bold;">加入なし</td></tr></table><div style="font-size:8pt; margin-top:3px; border:1px solid #ccc; padding:3px; background-color:#fffdfd;"><strong>NOC (ノンオペレーションチャージ)</strong><br>自走して返却された場合：20,000円 ／ 自走不能な場合：50,000円</div></div>
                     <div><div class="box-title" style="background-color:#d00;">【要確認】運行前点検表</div><table class="sheet-table"><thead><tr><th colspan="2">点検項目</th><th style="width:30px;">✓</th></tr></thead><tbody><tr><th rowspan="2" width="15%">ブレーキ</th><td class="check-item">ブレーキの遊び、効き具合</td><td>□</td></tr><tr><td class="check-item">ブレーキ液の量、パッドの摩耗</td><td>□</td></tr><tr><th rowspan="2">タイヤ</th><td class="check-item">空気圧、亀裂、溝の深さ</td><td>□</td></tr><tr><td class="check-item">チェーンの張り、注油状態</td><td>□</td></tr><tr><th rowspan="2">エンジン</th><td class="check-item">オイルの量、漏れ</td><td>□</td></tr><tr><td class="check-item">異音、始動性、加速の状態</td><td>□</td></tr><tr><th rowspan="2">保安部品</th><td class="check-item">ライト、ウインカーの点灯</td><td>□</td></tr><tr><td class="check-item">ブレーキランプ、ホーン</td><td>□</td></tr></tbody></table></div>
                     <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="box-title">走行距離</div><table class="sheet-table"><tr><th style="font-size:8pt;">出発時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-startKm" style="width:60px;"> km</td></tr><tr><th style="font-size:8pt;">返却時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-endKm" style="width:60px;"> km</td></tr></table></div><div style="flex:1;"><div class="box-title">燃料確認</div><div style="border:1px solid #000; height:50px; padding:5px; font-size:9pt;"><div><strong>出発：</strong> □ 満タン</div><div style="margin-top:5px;"><strong>返却：</strong> □ 満タン</div></div></div></div>
@@ -124,41 +141,23 @@
     function switchView(id){ document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='calendar') setTimeout(()=>calendar.render(),100); if(id==='settings') fetchMasterList(); if(id==='options') fetchOptionList(); if(id==='vehicles') fetchData(); }
     function fetchData(){ fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_bookings"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){currentBookings=d.data;renderBookingList(d.data);updateCalendar(d.data);}}); fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_vehicles"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){currentVehicles = d.data; renderVehicleList(d.data);}}); }
 
-    // ★貸渡証の自動入力ロジック（StartKmの取得）★
+    // ★貸渡証表示（ナンバープレート自動取得機能追加）★
     function openSheet(id){
       const b=currentBookings.find(x=>x.id===id); if(!b)return;
       document.getElementById('sheet-today').innerText=new Date().toLocaleDateString();document.getElementById('sheet-id').innerText=b.id;document.getElementById('sheet-rowIndex').value=b.rowIndex;document.getElementById('sheet-name').value=b.name;document.getElementById('sheet-zip').value=b.zip||"";document.getElementById('sheet-address').value=b.address;document.getElementById('sheet-phone').value=b.phone;document.getElementById('sheet-license').value=b.license||"";document.getElementById('sheet-price').value=b.price;document.getElementById('sheet-total-display').value=b.price;document.getElementById('sheet-bike').value=b.bike;document.getElementById('sheet-options-detail').value=b.options||"なし";if(b.dateRange.includes("〜")){const p=b.dateRange.split("〜");document.getElementById('sheet-start-date').value=p[0].trim();document.getElementById('sheet-end-date').value=p[1].trim();}else{document.getElementById('sheet-start-date').value=b.dateRange;}
       
-      // スタートKMのロジック: 既に保存済み(b.startKm)があればそれを使う。無ければ車両台帳(currentVehicles)から探す。
-      if (b.startKm) {
-        document.getElementById('sheet-startKm').value = b.startKm;
-      } else {
-        const vehicle = currentVehicles.find(v => v.name === b.bike);
-        if (vehicle) {
-          document.getElementById('sheet-startKm').value = vehicle.km;
-        } else {
-          document.getElementById('sheet-startKm').value = "";
-        }
-      }
+      // スタートKM
+      if (b.startKm) document.getElementById('sheet-startKm').value = b.startKm;
+      else { const v = currentVehicles.find(v => v.name === b.bike); document.getElementById('sheet-startKm').value = v ? v.km : ""; }
       
+      // ★ナンバープレート取得
+      const vPlate = currentVehicles.find(v => v.name === b.bike);
+      document.getElementById('sheet-plate').value = vPlate ? vPlate.plate : "";
+
       document.getElementById('sheet-endKm').value=b.endKm||"";switchView('sheet-view');window.scrollTo(0,0);
     }
     
-    // ★貸渡証の保存ロジック（bikeNameも送る）★
-    function saveSheetData(){
-      const d={
-        action:"update_booking",
-        rowIndex:document.getElementById('sheet-rowIndex').value,
-        name:document.getElementById('sheet-name').value,phone:document.getElementById('sheet-phone').value,address:document.getElementById('sheet-address').value,license:document.getElementById('sheet-license').value,
-        startKm:document.getElementById('sheet-startKm').value,
-        endKm:document.getElementById('sheet-endKm').value,
-        bikeName:document.getElementById('sheet-bike').value // 車両台帳更新用
-      };
-      const btn=document.getElementById('btn-save');btn.innerText="保存中...";
-      fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{btn.innerText="💾 内容を保存";if(d.result==='success')alert("保存しました！");});
-    }
-
-    // 他の関数は変更なし
+    function saveSheetData(){const d={action:"update_booking",rowIndex:document.getElementById('sheet-rowIndex').value,name:document.getElementById('sheet-name').value,phone:document.getElementById('sheet-phone').value,address:document.getElementById('sheet-address').value,license:document.getElementById('sheet-license').value,startKm:document.getElementById('sheet-startKm').value,endKm:document.getElementById('sheet-endKm').value,bikeName:document.getElementById('sheet-bike').value};const btn=document.getElementById('btn-save');btn.innerText="保存中...";fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{btn.innerText="💾 内容を保存";if(d.result==='success')alert("保存しました！");});}
     function renderBookingList(l){let h="";l.forEach(b=>{h+=`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.bike}</td><td>${b.dateRange}</td><td><button class="btn btn-sm" onclick="openSheet('${b.id}')">📝 貸渡証</button></td></tr>`;});document.getElementById('booking-list-body').innerHTML=h;}
     function renderVehicleList(l){const d=document.getElementById('vehicle-list-body');let h="";const t=new Date();const w=new Date();w.setDate(t.getDate()+30);l.forEach(v=>{let c1="text-success",c2="text-success",c3="text-success";if(v.insurance&&v.insurance!=="-"){if(new Date(v.insurance)<t)c1="text-danger";else if(new Date(v.insurance)<w)c1="text-warning";}if(v.inspection&&v.inspection!=="-"){if(new Date(v.inspection)<t)c2="text-danger";else if(new Date(v.inspection)<w)c2="text-warning";}if(parseInt(v.km)>=parseInt(v.nextOil))c3="text-danger";else if(parseInt(v.km)>=parseInt(v.nextOil)-500)c3="text-warning";let b=v.status==='active'?'<span class="badge bg-green">可</span>':'<span class="badge bg-red">メンテ</span>';h+=`<tr><td>${v.id}</td><td><b>${v.name}</b><br><small>${v.plate}</small></td><td>${parseInt(v.km).toLocaleString()} km</td><td class="${c1}">${v.insurance}</td><td class="${c2}">${v.inspection}</td><td class="${c3}">次回:${parseInt(v.nextOil).toLocaleString()}</td><td>${b}</td><td><button class="btn btn-sm" onclick="openVehicleModal(${v.id})">編集</button></td></tr>`;});d.innerHTML=h;}
     function openVehicleModal(id){const v=currentVehicles.find(i=>i.id==id);if(!v)return;document.getElementById('vehicle-id').value=v.id;document.getElementById('vehicle-name-display').innerText=v.name;document.getElementById('v-plate').value=v.plate;document.getElementById('v-km').value=v.km;document.getElementById('v-oil').value=v.nextOil;const f=(d)=>(d&&d!=='-')?d.replace(/\//g,'-'):'';document.getElementById('v-insurance').value=f(v.insurance);document.getElementById('v-inspection').value=f(v.inspection);document.getElementById('v-status').value=v.status;document.getElementById('vehicleModal').style.display='flex';}
@@ -166,8 +165,18 @@
     function updateCalendar(l){calendar.removeAllEvents();l.forEach(b=>{if(b.dateRange&&b.dateRange.includes("〜")){const p=b.dateRange.split("〜");calendar.addEvent({title:b.bike+' ('+b.name+')',start:new Date(p[0]),end:new Date(p[1]),color:'#06C755'});}else{calendar.addEvent({title:b.bike,start:new Date(b.dateRange),color:'#06C755'});}});}
     function fetchPriceClasses(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_price_classes"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){priceClasses=d.data;const s=document.getElementById('master-class');s.innerHTML="";d.data.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.text=p.name;s.appendChild(o);});}});}
     function fetchMasterList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_master_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){let h="";d.data.forEach(m=>{h+=`<tr><td>${m.category}</td><td>${m.name}</td><td>${m.className}</td><td><button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex},'${m.category}','${m.name}','${m.className}')">編集</button><button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button></td></tr>`});document.getElementById('master-list-body').innerHTML=h;}});}
-    function fetchOptionList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_option_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){let h="";d.data.forEach(o=>{h+=`<tr><td>${o.name}</td><td>${o.price}</td><td><button class="btn btn-sm btn-red" onclick="deleteOption(${o.rowIndex})">削除</button></td></tr>`});document.getElementById('option-list-body').innerHTML=h;}});}
-    function addOption(){const n=document.getElementById('opt-name').value;const p=document.getElementById('opt-price').value;if(n&&p)fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"add_option",name:n,price:p})}).then(()=>{document.getElementById('opt-name').value="";document.getElementById('opt-price').value="";fetchOptionList();});}
+    
+    // --- オプション管理 ---
+    function fetchOptionList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_option_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){let h="";d.data.forEach(o=>{h+=`<tr><td>${o.name}</td><td>¥${Number(o.p24).toLocaleString()} /日</td><td><button class="btn btn-sm btn-red" onclick="deleteOption(${o.rowIndex})">削除</button></td></tr>`});document.getElementById('option-list-body').innerHTML=h;}});}
+    function addOption(){
+      const n=document.getElementById('opt-name').value;
+      const p4=document.getElementById('opt-p4').value; const p8=document.getElementById('opt-p8').value;
+      const p24=document.getElementById('opt-p24').value; const pAdd=document.getElementById('opt-pAdd').value;
+      if(n&&p4&&p8&&p24&&pAdd) fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"add_option",name:n,p4:p4,p8:p8,p24:p24,pAdd:pAdd})}).then(()=>{
+        document.getElementById('opt-name').value=""; document.getElementById('opt-p4').value=""; document.getElementById('opt-p8').value=""; document.getElementById('opt-p24').value=""; document.getElementById('opt-pAdd').value="";
+        fetchOptionList();
+      }); else alert("全ての項目を入力してください");
+    }
     function deleteOption(idx){if(confirm("削除しますか？"))fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"delete_option",rowIndex:idx})}).then(()=>{fetchOptionList();});}
     function openMasterModal(idx="",cat="",nm="",cls=""){document.getElementById('master-rowIndex').value=idx;if(cat)document.getElementById('master-category').value=cat;document.getElementById('master-name').value=nm;if(cls)document.getElementById('master-class').value=cls;if(!idx){document.getElementById('master-title').innerText="新規バイク登録";document.getElementById('master-details').style.display="block";document.getElementById('new-plate').value="";document.getElementById('new-km').value=0;document.getElementById('new-oil').value=3000;document.getElementById('new-insurance').value="";document.getElementById('new-inspection').value="";}else{document.getElementById('master-title').innerText="設定編集";document.getElementById('master-details').style.display="none";}document.getElementById('masterModal').style.display='flex';}
     function saveMaster(){const idx=document.getElementById('master-rowIndex').value;const nm=document.getElementById('master-name').value;if(!nm)return alert("バイク名を入力");if(!idx){if(!document.getElementById('new-plate').value)return alert("【必須】ナンバープレートを入力してください");}const d={action:idx?"edit_master":"add_master",rowIndex:idx,category:document.getElementById('master-category').value,name:nm,className:document.getElementById('master-class').value,plate:document.getElementById('new-plate').value,km:document.getElementById('new-km').value,nextOil:document.getElementById('new-oil').value,insurance:document.getElementById('new-insurance').value,inspection:document.getElementById('new-inspection').value};fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{if(d.result==='success'){document.getElementById('masterModal').style.display='none';fetchMasterList();alert("保存しました");}else{alert("エラー:"+d.message);}});}
