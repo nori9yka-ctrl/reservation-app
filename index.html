@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レンタル予約</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
     /* CSSスタイル（変更なし） */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
@@ -71,12 +73,10 @@
         <div class="time-group"><label class="required">返却時間</label><select id="endTime" onchange="calcTotal()"></select></div>
       </div>
       <div id="days-display" style="text-align:right; font-size:0.8rem; color:#888; margin-top:4px;">0時間</div>
-      <div class="time-note">※18:00以降の返却は無人返却BOXのご利用となります。</div>
+      <div class="time-note">※18:00以降の返却は無人返却BOXのご利用となります。<br>※木曜日は定休日のため貸出（出発）はできません。</div>
       <label class="required">排気量クラス</label><select id="classSelect" onchange="updateBikeList()"><option value="">読み込み中...</option></select>
       <label class="required">車種選択</label><div id="bike-loading" style="display:none; color:#06C755; font-size:0.8rem; text-align:right;">🔍 空き状況を確認中...</div><select id="bikeSelect" onchange="calcTotal()" disabled><option value="0">先にクラスを選択してください</option></select>
-      
       <label>オプション選択 (1日あたり)</label><div id="optionArea"></div>
-      
       <label>備考</label><textarea id="memo"></textarea><div style="height: 60px;"></div>
     </div>
   </div>
@@ -120,7 +120,28 @@
         fetchMasterData();
       }).catch(e => fetchMasterData());
 
-      fpInstance = flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", locale: "ja", disableMobile: "true", onClose: function() { calcTotal(); checkAvailability(); } });
+      // ★日付選択の初期化（木曜チェック追加）
+      fpInstance = flatpickr("#dateRange", { 
+        mode: "range", 
+        minDate: "today", 
+        dateFormat: "Y-m-d", 
+        locale: "ja", 
+        disableMobile: "true",
+        onClose: function(selectedDates) {
+          // 木曜日チェック (0=日, 4=木)
+          if(selectedDates.length > 0) {
+            const startDay = selectedDates[0].getDay();
+            if(startDay === 4) {
+              alert("申し訳ありません。\n木曜日は定休日のため、貸出（出発）には指定できません。\n（返却のみの場合は可能です）");
+              fpInstance.clear(); // 選択解除
+              return;
+            }
+          }
+          calcTotal(); 
+          checkAvailability(); 
+        } 
+      });
+
       generateTimeOptions('startTime', 9, 18); generateTimeOptions('endTime', 0, 23);
     };
 
@@ -128,14 +149,9 @@
       fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_data" }) }).then(r=>r.json()).then(d=>{
         if (d.result === 'success') { 
           masterData.categories = d.categories; 
-          masterData.options = d.options; // オプション取得
-          
-          initClassSelect(); 
-          initOptionSelect(); // オプション生成
-
-          document.getElementById('loading').style.display = 'none'; 
-          document.getElementById('input-screen').style.display = 'block'; 
-          document.getElementById('price-bar').style.display = 'flex'; 
+          masterData.options = d.options; 
+          initClassSelect(); initOptionSelect(); 
+          document.getElementById('loading').style.display = 'none'; document.getElementById('input-screen').style.display = 'block'; document.getElementById('price-bar').style.display = 'flex'; 
         }
       });
     }
@@ -145,10 +161,8 @@
       masterData.categories.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = c.name; s.appendChild(o); });
     }
 
-    // ★オプションの生成
     function initOptionSelect() {
-      const area = document.getElementById('optionArea');
-      area.innerHTML = "";
+      const area = document.getElementById('optionArea'); area.innerHTML = "";
       masterData.options.forEach(opt => {
         const div = document.createElement('div'); div.className = 'option-row';
         div.innerHTML = `<div class="option-label">${opt.name}</div><div class="option-price">+¥${opt.price}</div><select class="option-select" data-price="${opt.price}" data-name="${opt.name}" onchange="calcTotal()"><option value="0">なし</option><option value="1">1</option><option value="2">2</option></select>`;
@@ -160,7 +174,6 @@
       const dates = fpInstance.selectedDates;
       if (dates.length === 0) return;
       const sDate = dates[0]; const eDate = dates.length > 1 ? dates[1] : sDate;
-      
       const sH = parseInt(document.getElementById('startTime').value); const eH = parseInt(document.getElementById('endTime').value);
       const start = new Date(sDate); start.setHours(sH); const end = new Date(eDate); end.setHours(eH);
       let diffMs = end - start;
@@ -191,7 +204,6 @@
       return total;
     }
 
-    // --- 以下変更なし (在庫確認、送信など) ---
     function updateBikeList() { const idx = document.getElementById('classSelect').value; const bs = document.getElementById('bikeSelect'); bs.innerHTML = '<option value="0">選択してください</option>'; if (idx === "") { bs.disabled = true; return; } const bikes = masterData.categories[idx].bikes; bikes.forEach(b => { const o = document.createElement('option'); o.value = b.name; o.dataset.p4 = b.p4; o.dataset.p8 = b.p8; o.dataset.p24 = b.p24; o.dataset.pAdd = b.pAdd; if (busyBikesCache.includes(b.name)) { o.disabled = true; o.textContent = `❌ ${b.name} (貸出中)`; } else { o.textContent = `${b.name}`; } bs.appendChild(o); }); bs.disabled = false; calcTotal(); }
     function generateTimeOptions(id, s, e) { const sel = document.getElementById(id); for(let i=s; i<=e; i++){ const o=document.createElement('option'); o.value=i; o.text=i+":00"; if(id==='startTime'&&i===10)o.selected=true; if(id==='endTime'&&i===18)o.selected=true; sel.appendChild(o); } }
     function checkAvailability() { const ds=fpInstance.selectedDates; if(ds.length===0)return; const sYMD=formatDateYMD(ds[0]); const eYMD=ds.length>1?formatDateYMD(ds[1]):sYMD; const sT=document.getElementById('startTime').value+":00"; const eT=document.getElementById('endTime').value+":00"; const fullS=`${sYMD} ${sT}`; const fullE=`${eYMD} ${eT}`; document.getElementById('bike-loading').style.display='block'; fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"check_availability",startDate:fullS,endDate:fullE})}).then(r=>r.json()).then(d=>{document.getElementById('bike-loading').style.display='none';if(d.result==='success'){busyBikesCache=d.busyBikes;updateBikeList();}}); }
