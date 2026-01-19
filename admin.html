@@ -53,6 +53,10 @@
     .check-item { text-align: left !important; padding-left: 5px; font-size: 8pt; }
     .shop-stamp { width: 55px; height: 55px; border: 1px solid #ccc; color: #ccc; display: flex; align-items: center; justify-content: center; float: right; margin-left: 10px; font-size: 8pt; }
     .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; height: 20px; }
+    
+    /* 料金表のスタイル調整 */
+    #fee-table-body td { height: 24px; vertical-align: middle; }
+
     @media print { body { background: white; display: block; height: auto; margin: 0; } .sidebar, .no-print, .modal, .page-title, .nav-item { display: none !important; } .main { padding: 0; overflow: visible; } .sheet-wrapper { background: white; padding: 0; display: block; } .sheet-container { box-shadow: none; margin: 0; padding: 10mm; width: 100%; max-width: 100%; } .sheet-input { background: transparent !important; border-bottom: none !important; } .view-section { display: none; } #sheet-view { display: block !important; } }
   </style>
 </head>
@@ -74,7 +78,7 @@
     <div id="vehicles" class="view-section"><h2 class="page-title">車両台帳・メンテナンス</h2><div class="card"><table class="admin-table"><thead><tr><th>ID</th><th>車両名/No.</th><th>距離</th><th>自賠責</th><th>車検</th><th>オイル</th><th>状態</th><th>操作</th></tr></thead><tbody id="vehicle-list-body"></tbody></table></div></div>
     <div id="calendar" class="view-section"><h2 class="page-title">予約カレンダー</h2><div class="card"><div id='calendar-el'></div></div></div>
     <div id="settings" class="view-section"><h2 class="page-title">バイク登録・料金設定</h2><div class="card"><div style="text-align:right; margin-bottom:10px;"><button class="btn" onclick="openMasterModal()">＋ 新規バイク登録</button></div><table class="admin-table"><thead><tr><th>カテゴリ</th><th>バイク名</th><th>適用料金クラス</th><th>操作</th></tr></thead><tbody id="master-list-body"></tbody></table></div></div>
-    <div id="options" class="view-section"><h2 class="page-title">オプション品管理</h2><div class="card"><div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;"><input type="text" id="opt-name" placeholder="オプション名" style="flex:2;"><div class="flex-inputs" style="flex:4;"><input type="number" id="opt-p4" placeholder="4H"><input type="number" id="opt-p8" placeholder="8H"><input type="number" id="opt-p24" placeholder="24H"><input type="number" id="opt-pAdd" placeholder="以降"></div><button class="btn" onclick="addOption()">＋ 追加</button></div><table class="admin-table"><thead><tr><th>オプション名</th><th>24時間料金(目安)</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table></div></div>
+    <div id="options" class="view-section"><h2 class="page-title">オプション品管理</h2><div class="card"><div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;"><input type="text" id="opt-name" placeholder="オプション名 (例: ヘルメット)" style="flex:2;"><div class="flex-inputs" style="flex:4;"><input type="number" id="opt-p4" placeholder="4H"><input type="number" id="opt-p8" placeholder="8H"><input type="number" id="opt-p24" placeholder="24H"><input type="number" id="opt-pAdd" placeholder="以降"></div><button class="btn" onclick="addOption()">＋ 追加</button></div><table class="admin-table"><thead><tr><th>オプション名</th><th>24時間料金(目安)</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table></div></div>
 
     <div id="sheet-view" class="view-section">
       <div class="no-print" style="position:sticky; top:0; z-index:100; background:#333; padding:10px; text-align:center; color:white;">
@@ -102,24 +106,10 @@
 
                     <div style="flex-grow:1;"><div class="box-title">注意事項（重要）</div><div class="terms-box"><ul class="terms-list"><li><strong>事故・故障時：</strong>直ちに運転を中止し、負傷者救護、警察・当店へ連絡してください。</li><li><strong>駐車違反：</strong>確認標章が貼付された場合、直ちに管轄警察署へ出頭し反則金を納付してください。</li><li><strong>禁止行為：</strong>無断延長、又貸し、飲酒運転、競技使用等は固く禁じます。</li><li><strong>管理責任：</strong>使用中の車両管理（鍵紛失・盗難・イタズラ等）はお客様の責任となります。</li></ul></div></div>
                     <div><div class="box-title">車両外装チェック</div><div class="exterior-msg">出発前に車両の傷・凹み等を確認し、<br><span style="color:#d00;">スマホ等で必ず写真を撮影・保存してください。</span></div></div>
-                    
-                    <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px; font-size: 8.5pt;">
-                        <div class="shop-stamp">印</div>
-                        <strong>貸渡人：Renta-レンタ-(メカニックキャラバン)</strong><br>
-                        登録番号：T5810920497278<br>
-                        住所：和歌山県田辺市上の山1丁目10-12<br>
-                        電話：0739-34-2068
-                    </div>
+                    <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px; font-size: 8.5pt;"><div class="shop-stamp">印</div><strong>貸渡人：Renta-レンタ-(メカニックキャラバン)</strong><br>登録番号：T5810920497278<br>住所：和歌山県田辺市上の山1丁目10-12<br>電話：0739-34-2068</div>
                 </div>
                 <div class="col-right">
-                    <div>
-                        <div class="box-title">ご利用車両・日時</div>
-                        <table class="sheet-table">
-                            <tr><th style="width:20%;">車種名</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-bike"></td></tr>
-                            <tr><th style="width:20%;">登録No.</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-plate"></td></tr>
-                        </table>
-                        <table class="sheet-table" style="margin-top:-1px;"><tr><th style="width:20%;">貸渡日時</th><td><input type="text" class="sheet-input" id="sheet-start-date"></td></tr><tr><th>返却日時</th><td><input type="text" class="sheet-input" id="sheet-end-date"></td></tr></table>
-                    </div>
+                    <div><div class="box-title">ご利用車両・日時</div><table class="sheet-table"><tr><th style="width:20%;">車種名</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-bike"></td></tr><tr><th style="width:20%;">登録No.</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-plate"></td></tr></table><table class="sheet-table" style="margin-top:-1px;"><tr><th style="width:20%;">貸渡日時</th><td><input type="text" class="sheet-input" id="sheet-start-date"></td></tr><tr><th>返却日時</th><td><input type="text" class="sheet-input" id="sheet-end-date"></td></tr></table></div>
                     <div><div class="box-title">保険・補償内容（約款第27条）</div><table class="sheet-table"><tr><th width="20%">対人補償</th><td>無制限</td><th width="20%">対物補償</th><td>無制限 <span style="font-size:7.5pt;">(免責5万)</span></td></tr><tr><th>人身傷害</th><td>1名500万<br><span style="color:#d00;font-size:7pt;">(125cc以下対象外)</span></td><th>車両保険</th><td style="color:#d00;font-weight:bold;">加入なし</td></tr></table><div style="font-size:8pt; margin-top:3px; border:1px solid #ccc; padding:3px; background-color:#fffdfd;"><strong>NOC (ノンオペレーションチャージ)</strong><br>自走して返却された場合：20,000円 ／ 自走不能な場合：50,000円</div></div>
                     <div><div class="box-title" style="background-color:#d00;">【要確認】運行前点検表</div><table class="sheet-table"><thead><tr><th colspan="2">点検項目</th><th style="width:30px;">✓</th></tr></thead><tbody><tr><th rowspan="2" width="15%">ブレーキ</th><td class="check-item">ブレーキの遊び、効き具合</td><td>□</td></tr><tr><td class="check-item">ブレーキ液の量、パッドの摩耗</td><td>□</td></tr><tr><th rowspan="2">タイヤ</th><td class="check-item">空気圧、亀裂、溝の深さ</td><td>□</td></tr><tr><td class="check-item">チェーンの張り、注油状態</td><td>□</td></tr><tr><th rowspan="2">エンジン</th><td class="check-item">オイルの量、漏れ</td><td>□</td></tr><tr><td class="check-item">異音、始動性、加速の状態</td><td>□</td></tr><tr><th rowspan="2">保安部品</th><td class="check-item">ライト、ウインカーの点灯</td><td>□</td></tr><tr><td class="check-item">ブレーキランプ、ホーン</td><td>□</td></tr></tbody></table></div>
                     <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="box-title">走行距離</div><table class="sheet-table"><tr><th style="font-size:8pt;">出発時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-startKm" style="width:60px;"> km</td></tr><tr><th style="font-size:8pt;">返却時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-endKm" style="width:60px;"> km</td></tr></table></div><div style="flex:1;"><div class="box-title">燃料確認</div><div style="border:1px solid #000; height:50px; padding:5px; font-size:9pt;"><div><strong>出発：</strong> □ 満タン</div><div style="margin-top:5px;"><strong>返却：</strong> □ 満タン</div></div></div></div>
@@ -138,51 +128,103 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
     
-    let currentBookings=[]; let currentVehicles=[]; let priceClasses=[]; let calendar; 
-    document.addEventListener('DOMContentLoaded', ()=>{ fetchData(); fetchPriceClasses(); var cEl=document.getElementById('calendar-el'); calendar = new FullCalendar.Calendar(cEl,{ initialView:'dayGridMonth', locale:'ja', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' } }); calendar.render(); });
+    let currentBookings=[]; let currentVehicles=[]; let masterBikes=[]; let optionList=[]; let priceClasses=[]; let calendar; 
+    
+    document.addEventListener('DOMContentLoaded', ()=>{ 
+      fetchData(); fetchPriceClasses(); fetchOptionList(); fetchMasterList(); // 全データ取得
+      var cEl=document.getElementById('calendar-el'); calendar = new FullCalendar.Calendar(cEl,{ initialView:'dayGridMonth', locale:'ja', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' } }); calendar.render(); 
+    });
+
     function switchView(id){ document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='calendar') setTimeout(()=>calendar.render(),100); if(id==='settings') fetchMasterList(); if(id==='options') fetchOptionList(); if(id==='vehicles') fetchData(); }
     function fetchData(){ fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_bookings"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){currentBookings=d.data;renderBookingList(d.data);updateCalendar(d.data);}}); fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_vehicles"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){currentVehicles = d.data; renderVehicleList(d.data);}}); }
 
-    // ★貸渡証ロジック（明細行の自動生成）★
+    // --- ★料金計算ロジック（時間計算） ---
+    function safeParseInt(val) { const n = parseInt(val); return isNaN(n) ? 0 : n; }
+    function calculatePrice(rates, hours) {
+      const p4 = safeParseInt(rates.p4); const p8 = safeParseInt(rates.p8); const p24 = safeParseInt(rates.p24); const pAdd = safeParseInt(rates.pAdd);
+      if (hours <= 4) return p4; else if (hours <= 8) return p8; else if (hours <= 24) return p24; else { const extraDays = Math.ceil((hours - 24) / 24); return p24 + (pAdd * extraDays); }
+    }
+
+    // --- ★貸渡証表示（明細＆金額自動計算） ---
     function openSheet(id){
       const b=currentBookings.find(x=>x.id===id); if(!b)return;
-      document.getElementById('sheet-today').innerText=new Date().toLocaleDateString();document.getElementById('sheet-id').innerText=b.id;document.getElementById('sheet-rowIndex').value=b.rowIndex;document.getElementById('sheet-name').value=b.name;document.getElementById('sheet-zip').value=b.zip||"";document.getElementById('sheet-address').value=b.address;document.getElementById('sheet-phone').value=b.phone;document.getElementById('sheet-license').value=b.license||"";
+      
+      // データ注入
+      document.getElementById('sheet-today').innerText=new Date().toLocaleDateString();
+      document.getElementById('sheet-id').innerText=b.id;
+      document.getElementById('sheet-rowIndex').value=b.rowIndex;
+      document.getElementById('sheet-name').value=b.name;
+      document.getElementById('sheet-zip').value=b.zip||"";
+      document.getElementById('sheet-address').value=b.address;
+      document.getElementById('sheet-phone').value=b.phone;
+      document.getElementById('sheet-license').value=b.license||"";
       document.getElementById('sheet-bike').value=b.bike;
       
-      // スタートKMとナンバープレートの自動入力
+      // ナンバー＆距離自動入力
       const v = currentVehicles.find(v => v.name === b.bike);
       document.getElementById('sheet-startKm').value = b.startKm || (v ? v.km : "");
       document.getElementById('sheet-plate').value = v ? v.plate : "";
-      
-      if(b.dateRange.includes("〜")){const p=b.dateRange.split("〜");document.getElementById('sheet-start-date').value=p[0].trim();document.getElementById('sheet-end-date').value=p[1].trim();}else{document.getElementById('sheet-start-date').value=b.dateRange;}
       document.getElementById('sheet-endKm').value=b.endKm||"";
 
-      // ★明細表の構築
+      // 日時分割
+      let startStr = "", endStr = "";
+      if(b.dateRange.includes("〜")){ const p=b.dateRange.split("〜"); startStr=p[0].trim(); endStr=p[1].trim(); } 
+      else { startStr=b.dateRange; endStr=b.dateRange; }
+      document.getElementById('sheet-start-date').value = startStr;
+      document.getElementById('sheet-end-date').value = endStr;
+
+      // --- ★金額計算 & 明細生成 ---
+      const startDate = new Date(startStr); const endDate = new Date(endStr);
+      let diffMs = endDate - startDate;
+      if(diffMs < 0) diffMs = 0;
+      const diffHours = diffMs / (1000 * 60 * 60);
+
       const tbody = document.getElementById('fee-table-body');
-      let rowsHTML = `<tr><td style="text-align:left; padding-left:5px;">基本料金 (車種: ${b.bike})</td><td><input type="text" class="sheet-input right" id="sheet-price"></td></tr>`;
+      let rows = "";
       
-      // オプション文字列 ("ヘルメット×1\nグローブ×1") を分解して行に追加
+      // 1. バイク基本料金の計算
+      let bikePrice = 0;
+      const bikeData = masterBikes.find(m => m.name === b.bike);
+      if(bikeData) {
+        bikePrice = calculatePrice(bikeData, diffHours);
+        rows += `<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right" value="¥${bikePrice.toLocaleString()}"></td></tr>`;
+      } else {
+        rows += `<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right"></td></tr>`;
+      }
+
+      // 2. オプション料金の計算と行追加
+      let optionsTotal = 0;
       if(b.options && b.options !== "なし") {
-        const lines = b.options.split('\n');
+        const lines = b.options.split('\n'); // "ヘルメット×1" のようなリスト
         lines.forEach(line => {
-          if(line.trim() !== "") {
-            rowsHTML += `<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right" placeholder="金額"></td></tr>`;
+          if(!line.trim()) return;
+          // "ヘルメット×1" から "ヘルメット" と "1" を抽出
+          const match = line.match(/(.*)×(\d+)/);
+          if(match) {
+            const optName = match[1].trim();
+            const qty = parseInt(match[2]);
+            const optData = optionList.find(o => o.name === optName);
+            if(optData) {
+              const price = calculatePrice(optData, diffHours) * qty;
+              optionsTotal += price;
+              rows += `<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right" value="¥${price.toLocaleString()}"></td></tr>`;
+            } else {
+              rows += `<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right"></td></tr>`;
+            }
           }
         });
       }
-      
-      rowsHTML += `
-        <tr><td style="text-align:left; padding-left:5px;">その他</td><td><input type="text" class="sheet-input right"></td></tr>
-        <tr style="font-weight:bold; border-top:2px double #000;"><td style="text-align:center; background:#eee;">合計</td><td><input type="text" class="sheet-input right" id="sheet-total-display" style="font-weight:bold;"></td></tr>
-      `;
-      tbody.innerHTML = rowsHTML;
-      
-      // 合計金額だけは自動入力（明細の内訳金額は手入力用）
-      document.getElementById('sheet-total-display').value = b.price;
 
-      switchView('sheet-view');window.scrollTo(0,0);
+      rows += `
+        <tr><td style="text-align:left; padding-left:5px;">その他</td><td><input type="text" class="sheet-input right"></td></tr>
+        <tr style="font-weight:bold; border-top:2px double #000;"><td style="text-align:center; background:#eee;">合計</td><td><input type="text" class="sheet-input right" id="sheet-total-display" value="${b.price}" style="font-weight:bold;"></td></tr>
+      `;
+      tbody.innerHTML = rows;
+
+      switchView('sheet-view'); window.scrollTo(0,0);
     }
     
+    // 他の関数
     function saveSheetData(){const d={action:"update_booking",rowIndex:document.getElementById('sheet-rowIndex').value,name:document.getElementById('sheet-name').value,phone:document.getElementById('sheet-phone').value,address:document.getElementById('sheet-address').value,license:document.getElementById('sheet-license').value,startKm:document.getElementById('sheet-startKm').value,endKm:document.getElementById('sheet-endKm').value,bikeName:document.getElementById('sheet-bike').value};const btn=document.getElementById('btn-save');btn.innerText="保存中...";fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{btn.innerText="💾 内容を保存";if(d.result==='success')alert("保存しました！");});}
     function renderBookingList(l){let h="";l.forEach(b=>{h+=`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.bike}</td><td>${b.dateRange}</td><td><button class="btn btn-sm" onclick="openSheet('${b.id}')">📝 貸渡証</button></td></tr>`;});document.getElementById('booking-list-body').innerHTML=h;}
     function renderVehicleList(l){const d=document.getElementById('vehicle-list-body');let h="";const t=new Date();const w=new Date();w.setDate(t.getDate()+30);l.forEach(v=>{let c1="text-success",c2="text-success",c3="text-success";if(v.insurance&&v.insurance!=="-"){if(new Date(v.insurance)<t)c1="text-danger";else if(new Date(v.insurance)<w)c1="text-warning";}if(v.inspection&&v.inspection!=="-"){if(new Date(v.inspection)<t)c2="text-danger";else if(new Date(v.inspection)<w)c2="text-warning";}if(parseInt(v.km)>=parseInt(v.nextOil))c3="text-danger";else if(parseInt(v.km)>=parseInt(v.nextOil)-500)c3="text-warning";let b=v.status==='active'?'<span class="badge bg-green">可</span>':'<span class="badge bg-red">メンテ</span>';h+=`<tr><td>${v.id}</td><td><b>${v.name}</b><br><small>${v.plate}</small></td><td>${parseInt(v.km).toLocaleString()} km</td><td class="${c1}">${v.insurance}</td><td class="${c2}">${v.inspection}</td><td class="${c3}">次回:${parseInt(v.nextOil).toLocaleString()}</td><td>${b}</td><td><button class="btn btn-sm" onclick="openVehicleModal(${v.id})">編集</button></td></tr>`;});d.innerHTML=h;}
@@ -190,19 +232,9 @@
     function saveVehicle(){const d={action:"update_vehicle",id:document.getElementById('vehicle-id').value,plate:document.getElementById('v-plate').value,km:document.getElementById('v-km').value,nextOil:document.getElementById('v-oil').value,insurance:document.getElementById('v-insurance').value,inspection:document.getElementById('v-inspection').value,status:document.getElementById('v-status').value};fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{if(d.result==='success'){alert("更新しました");document.getElementById('vehicleModal').style.display='none';fetchData();}});}
     function updateCalendar(l){calendar.removeAllEvents();l.forEach(b=>{if(b.dateRange&&b.dateRange.includes("〜")){const p=b.dateRange.split("〜");calendar.addEvent({title:b.bike+' ('+b.name+')',start:new Date(p[0]),end:new Date(p[1]),color:'#06C755'});}else{calendar.addEvent({title:b.bike,start:new Date(b.dateRange),color:'#06C755'});}});}
     function fetchPriceClasses(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_price_classes"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){priceClasses=d.data;const s=document.getElementById('master-class');s.innerHTML="";d.data.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.text=p.name;s.appendChild(o);});}});}
-    function fetchMasterList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_master_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){let h="";d.data.forEach(m=>{h+=`<tr><td>${m.category}</td><td>${m.name}</td><td>${m.className}</td><td><button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex},'${m.category}','${m.name}','${m.className}')">編集</button><button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button></td></tr>`});document.getElementById('master-list-body').innerHTML=h;}});}
-    
-    // --- オプション管理 (4つの料金) ---
-    function fetchOptionList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_option_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){let h="";d.data.forEach(o=>{h+=`<tr><td>${o.name}</td><td>24h: ¥${Number(o.p24).toLocaleString()}</td><td><button class="btn btn-sm btn-red" onclick="deleteOption(${o.rowIndex})">削除</button></td></tr>`});document.getElementById('option-list-body').innerHTML=h;}});}
-    function addOption(){
-      const n=document.getElementById('opt-name').value;
-      const p4=document.getElementById('opt-p4').value; const p8=document.getElementById('opt-p8').value;
-      const p24=document.getElementById('opt-p24').value; const pAdd=document.getElementById('opt-pAdd').value;
-      if(n&&p4&&p8&&p24&&pAdd) fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"add_option",name:n,p4:p4,p8:p8,p24:p24,pAdd:pAdd})}).then(()=>{
-        document.getElementById('opt-name').value=""; document.getElementById('opt-p4').value=""; document.getElementById('opt-p8').value=""; document.getElementById('opt-p24').value=""; document.getElementById('opt-pAdd').value="";
-        fetchOptionList();
-      }); else alert("全ての項目を入力してください");
-    }
+    function fetchMasterList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_master_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){masterBikes=d.data; let h="";d.data.forEach(m=>{h+=`<tr><td>${m.category}</td><td>${m.name}</td><td>${m.className}</td><td><button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex},'${m.category}','${m.name}','${m.className}')">編集</button><button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button></td></tr>`});document.getElementById('master-list-body').innerHTML=h;}});}
+    function fetchOptionList(){fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"get_option_list"})}).then(r=>r.json()).then(d=>{if(d.result==='success'){optionList=d.data; let h="";d.data.forEach(o=>{h+=`<tr><td>${o.name}</td><td>24h: ¥${Number(o.p24).toLocaleString()}</td><td><button class="btn btn-sm btn-red" onclick="deleteOption(${o.rowIndex})">削除</button></td></tr>`});document.getElementById('option-list-body').innerHTML=h;}});}
+    function addOption(){const n=document.getElementById('opt-name').value;const p4=document.getElementById('opt-p4').value;const p8=document.getElementById('opt-p8').value;const p24=document.getElementById('opt-p24').value;const pAdd=document.getElementById('opt-pAdd').value;if(n&&p4&&p8&&p24&&pAdd)fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"add_option",name:n,p4:p4,p8:p8,p24:p24,pAdd:pAdd})}).then(()=>{document.getElementById('opt-name').value="";document.getElementById('opt-p4').value="";document.getElementById('opt-p8').value="";document.getElementById('opt-p24').value="";document.getElementById('opt-pAdd').value="";fetchOptionList();});else alert("全ての項目を入力してください");}
     function deleteOption(idx){if(confirm("削除しますか？"))fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"delete_option",rowIndex:idx})}).then(()=>{fetchOptionList();});}
     function openMasterModal(idx="",cat="",nm="",cls=""){document.getElementById('master-rowIndex').value=idx;if(cat)document.getElementById('master-category').value=cat;document.getElementById('master-name').value=nm;if(cls)document.getElementById('master-class').value=cls;if(!idx){document.getElementById('master-title').innerText="新規バイク登録";document.getElementById('master-details').style.display="block";document.getElementById('new-plate').value="";document.getElementById('new-km').value=0;document.getElementById('new-oil').value=3000;document.getElementById('new-insurance').value="";document.getElementById('new-inspection').value="";}else{document.getElementById('master-title').innerText="設定編集";document.getElementById('master-details').style.display="none";}document.getElementById('masterModal').style.display='flex';}
     function saveMaster(){const idx=document.getElementById('master-rowIndex').value;const nm=document.getElementById('master-name').value;if(!nm)return alert("バイク名を入力");if(!idx){if(!document.getElementById('new-plate').value)return alert("【必須】ナンバープレートを入力してください");}const d={action:idx?"edit_master":"add_master",rowIndex:idx,category:document.getElementById('master-category').value,name:nm,className:document.getElementById('master-class').value,plate:document.getElementById('new-plate').value,km:document.getElementById('new-km').value,nextOil:document.getElementById('new-oil').value,insurance:document.getElementById('new-insurance').value,inspection:document.getElementById('new-inspection').value};fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(d=>{if(d.result==='success'){document.getElementById('masterModal').style.display='none';fetchMasterList();alert("保存しました");}else{alert("エラー:"+d.message);}});}
