@@ -4,82 +4,115 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レンタル予約</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
-    /* CSSスタイル */
+    /* --- 基本スタイル --- */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
-    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 400px; margin: 0 auto 20px auto; }
     h2 { text-align: center; font-size: 1.3rem; margin-bottom: 20px; color: #06C755; font-weight: bold; }
-    .section-title { margin-top: 30px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; font-size: 1.1rem; font-weight: bold; color: #333; }
+    .logo-area { text-align: center; margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #333; }
+    
+    /* 入力フォーム */
     label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; margin-top: 15px; }
-    .required::after { content: "必須"; background: #ff4b4b; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
-    .optional::after { content: "任意"; background: #aaa; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
-    input:not([type="checkbox"]), select, textarea { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; -webkit-appearance: none; background: #fff; }
+    input:not([type="checkbox"]), select, textarea { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; background: #fff; -webkit-appearance: none; }
     input:focus, select:focus, textarea:focus { border-color: #06C755; outline: none; background-color: #fafffb; }
-    option:disabled { color: #ccc; background-color: #f9f9f9; }
-    .zip-group { display: flex; gap: 10px; } .zip-group input { width: 120px; } .zip-group button { width: auto; margin: 0; padding: 0 15px; font-size: 0.9rem; background: #666; color: white; border-radius: 10px; border:none; cursor:pointer;}
-    input.calendar-input { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2306C755" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>'); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; cursor: pointer; }
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; text-align: center; font-size: 1rem; }
+    .btn-primary { background: #06C755; color: white; }
+    .btn-secondary { background: #ccc; color: white; }
+    .link-text { text-align: center; margin-top: 15px; color: #06C755; text-decoration: underline; cursor: pointer; font-size: 0.9rem; }
+
+    /* 画面切り替え */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 予約画面用 */
+    .section-title { margin-top: 30px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; font-size: 1.1rem; font-weight: bold; }
+    .required::after { content: "必須"; background: #ff4b4b; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+    .optional::after { content: "任意"; background: #aaa; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+    .zip-group { display: flex; gap: 10px; } .zip-group input { width: 120px; } .zip-group button { width: auto; background: #666; color: white; border:none; border-radius:10px; padding:0 15px; cursor:pointer;}
+    .time-container { display: flex; gap: 10px; } .time-group { flex: 1; }
+    .time-note { font-size: 0.75rem; color: #d00; margin-top: 4px; }
+    .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
+    .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
+    .btn-submit { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    
+    /* 画像・オプション */
+    #bike-image-container { text-align: center; margin-bottom: 15px; display: none; }
+    #bike-image { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #eee; object-fit: cover; }
     .option-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
     .option-label { font-size: 0.95rem; flex: 1; }
     .option-price { font-size: 0.85rem; color: #888; margin-right: 10px; }
     .option-select { width: 80px; padding: 8px; margin-bottom: 0; }
-    .register-alert { background-color: #e6f9ed; border: 1px solid #06C755; color: #048c3b; padding: 15px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 20px; }
-    textarea { resize: vertical; height: 80px; }
+    .help-icon { color: #06C755; cursor: pointer; margin-left: 5px; }
+    
+    /* モーダル */
+    #descModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
+    .desc-content { background: white; padding: 25px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; }
+    .desc-close { background: #333; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; margin-top: 15px; }
+    
+    /* 確認画面用 */
     .confirm-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .confirm-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: #888; font-size: 0.85rem; width: 35%; }
-    .confirm-table td { text-align: right; padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 1rem; }
+    .confirm-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; color: #888; width: 35%; }
+    .confirm-table td { text-align: right; padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; }
     .confirm-total { text-align: center; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; }
-    .confirm-total-label { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
     .confirm-total-price { font-size: 2rem; color: #06C755; font-weight: bold; }
     .agreement-area { background-color: #fff8f0; border: 1px solid #e0c0a0; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 0.9rem; }
-    .agree-item { margin-bottom: 12px; display: flex; align-items: start; cursor: pointer; }
-    .agree-item input { width: 20px; height: 20px; margin-right: 10px; margin-top: 2px; -webkit-appearance: checkbox; appearance: checkbox; padding: 0; }
-    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-back { width: 40%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-    .btn-submit { width: 60%; background: #ccc; color: white; border: none; padding: 15px; border-radius: 30px; font-weight: bold; cursor: not-allowed; transition: 0.3s; }
-    .btn-submit.active { background: linear-gradient(135deg, #06C755, #04b34b); box-shadow: 0 4px 10px rgba(6, 199, 85, 0.3); cursor: pointer; }
-    .btn-submit.sending { background: #555 !important; cursor: wait !important; transform: scale(0.98); font-size: 1.1rem; }
-    #input-screen { display: none; } #confirm-screen { display: none; }
-    #loading { text-align: center; margin-top: 100px; font-weight: bold; color: #666; }
-    .price-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:none; justify-content: space-between; align-items: center; box-sizing: border-box; z-index: 100; }
-    .total-price { font-size: 1.4rem; font-weight: bold; color: #06C755; }
-    .submit-btn-mini { background: #06C755; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-    .time-container { display: flex; gap: 10px; } .time-group { flex: 1; } .time-note { font-size: 0.75rem; color: #d00; margin-top: 4px; }
-    
-    /* 画像エリア */
-    #bike-image-container { text-align: center; margin-bottom: 15px; display: none; }
-    #bike-image { max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #eee; object-fit: cover; }
-    
-    /* 説明アイコン */
-    .help-icon { color: #06C755; cursor: pointer; margin-left: 5px; font-size: 1rem; }
-
-    /* ★ カスタムモーダル (アラートの代わり) ★ */
-    #descModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
-    .desc-content { background: white; padding: 25px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .desc-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; color: #06C755; }
-    .desc-text { font-size: 0.95rem; line-height: 1.5; color: #333; margin-bottom: 20px; white-space: pre-wrap; }
-    .desc-close { background: #333; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
+    .agree-item { margin-bottom: 12px; display: flex; align-items: start; }
+    .agree-item input { width: 20px; height: 20px; margin-right: 10px; margin-top: 2px; }
   </style>
 </head>
 <body>
-  <div id="loading">🚀 読み込み中...</div>
-  
-  <div id="input-screen">
+  <div id="loading" style="text-align:center; margin-top:100px; font-weight:bold; color:#666;">🚀 読み込み中...</div>
+
+  <div id="login-screen" class="screen">
     <div class="card">
-      <div style="text-align:center; margin-bottom:10px;">ようこそ <span id="user-name" style="font-weight:bold;">ゲスト</span> さん</div>
-      <h2>レンタル予約</h2>
+      <div class="logo-area">Renta-レンタ-</div>
+      <h2>ログイン</h2>
+      <label>メールアドレス</label><input type="email" id="login-email">
+      <label>パスワード</label><input type="password" id="login-pass">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="doLogin()">ログイン</button>
+      </div>
+      <div class="link-text" onclick="showScreen('register-screen')">新規会員登録はこちら</div>
+    </div>
+  </div>
+
+  <div id="register-screen" class="screen">
+    <div class="card">
+      <h2>新規会員登録</h2>
+      <label class="required">お名前</label><input type="text" id="reg-name" placeholder="山田 太郎">
+      <label class="required">ふりがな</label><input type="text" id="reg-kana" placeholder="やまだ たろう">
+      <label class="required">メールアドレス</label><input type="email" id="reg-email">
+      <label class="required">パスワード</label><input type="password" id="reg-pass">
+      <label class="required">電話番号</label><input type="tel" id="reg-phone">
+      <label class="required">郵便番号</label><div class="zip-group"><input type="tel" id="reg-zip" onkeyup="if(this.value.length==7)searchAddress('reg-zip','reg-addr')"><button onclick="searchAddress('reg-zip','reg-addr')">検索</button></div>
+      <label class="required">住所</label><input type="text" id="reg-addr">
       
-      <div id="register-area">
-        <div class="register-alert" id="new-user-msg">🔰 初回のみお客様情報をご登録ください</div>
-        <div class="register-alert" id="repeat-user-msg" style="display:none; background:#e6f9ed; color:#048c3b;">✨ いつもありがとうございます！<br>前回のご登録情報を表示しています。</div>
-        <label class="required">お名前</label><input type="text" id="regName" placeholder="例：山田 太郎">
-        <label class="required">ふりがな</label><input type="text" id="regKana" placeholder="例：やまだ たろう">
-        <label class="required">電話番号</label><input type="tel" id="regPhone" placeholder="090-1234-5678">
-        <label class="optional">郵便番号</label><div class="zip-group"><input type="tel" id="zipcode" placeholder="7桁" maxlength="7"><button type="button" onclick="searchAddress()">検索</button></div>
-        <label class="required">住所</label><input type="text" id="regAddress" placeholder="市区町村・番地・建物名">
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="showScreen('login-screen')">戻る</button>
+        <button class="btn btn-primary" onclick="doRegister()">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="booking-screen" class="screen">
+    <div class="card">
+      <div style="text-align:center; margin-bottom:10px;">ようこそ <span id="user-display-name" style="font-weight:bold;">ゲスト</span> さん</div>
+      <h2 id="booking-title">レンタル予約</h2>
+      
+      <div id="guest-form-area">
+        <div class="section-title">お客様情報</div>
+        <label class="required">お名前</label><input type="text" id="bk-name">
+        <label class="required">ふりがな</label><input type="text" id="bk-kana">
+        <label class="required">電話番号</label><input type="tel" id="bk-phone">
+        <label class="optional">郵便番号</label><div class="zip-group"><input type="tel" id="bk-zip"><button onclick="searchAddress('bk-zip','bk-address')">検索</button></div>
+        <label class="required">住所</label><input type="text" id="bk-address">
       </div>
 
       <div class="section-title">ご予約内容</div>
@@ -93,15 +126,14 @@
 
       <label class="required">排気量クラス</label><select id="classSelect" onchange="updateBikeList()"><option value="">読み込み中...</option></select>
       <label class="required">車種選択</label><select id="bikeSelect" onchange="showBikeImage(); calcTotal();" disabled><option value="0">先にクラスを選択してください</option></select>
-      
-      <div id="bike-image-container"><img id="bike-image" src="" alt="バイク画像"></div>
+      <div id="bike-image-container"><img id="bike-image" src="" alt=""></div>
 
       <label>オプション選択 (1日あたり)</label><div id="optionArea"></div>
       <label>備考</label><textarea id="memo"></textarea><div style="height: 60px;"></div>
     </div>
   </div>
 
-  <div id="confirm-screen">
+  <div id="confirm-screen" class="screen">
     <div class="card">
       <h2>ご予約内容の確認</h2>
       <div class="section-title">お客様情報</div>
@@ -121,18 +153,13 @@
         <label class="agree-item"><input type="checkbox" id="checkTerms" onchange="checkAgreements()"><span>利用規約に同意します。</span></label>
         <label class="agree-item"><input type="checkbox" id="checkAge" onchange="checkAgreements()"><span>18歳以上であることを誓約します。</span></label>
       </div>
-      <div class="btn-group"><button class="btn-back" onclick="goBack()">修正する</button><button class="btn-submit" id="finalSubmitBtn" onclick="sendToGas()" disabled>予約確定</button></div>
+      <div class="btn-group"><button class="btn btn-secondary" onclick="showScreen('booking-screen')">修正する</button><button class="btn btn-primary" id="finalSubmitBtn" onclick="sendToGas()" disabled>予約確定</button></div>
     </div>
   </div>
-  <div class="price-bar" id="price-bar"><div><div style="font-size:0.8rem; color:#555;">お支払い予定額</div><div class="total-price" id="totalPriceDisplay">¥0</div></div><button class="submit-btn-mini" onclick="showConfirm()">確認へ進む</button></div>
 
-  <div id="descModal">
-    <div class="desc-content">
-      <div class="desc-title" id="desc-title"></div>
-      <div class="desc-text" id="desc-text"></div>
-      <button class="desc-close" onclick="document.getElementById('descModal').style.display='none'">閉じる</button>
-    </div>
-  </div>
+  <div class="price-bar" id="price-bar"><div><div style="font-size:0.8rem; color:#555;">お支払い予定額</div><div class="total-price" id="totalPriceDisplay">¥0</div></div><button class="btn-submit" onclick="showConfirm()">確認へ進む</button></div>
+
+  <div id="descModal"><div class="desc-content"><div class="desc-title" id="desc-title"></div><div class="desc-text" id="desc-text"></div><button class="desc-close" onclick="document.getElementById('descModal').style.display='none'">閉じる</button></div></div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
@@ -140,150 +167,168 @@
 
     let masterData = { categories: [], options: [] };
     let allReservations = []; 
-    let fpInstance; let lineProfile = null; 
+    let fpInstance; 
+    let lineProfile = null; 
+    let currentUser = null; // ログインユーザー情報
 
+    // ★ 初期化フロー
     window.onload = function() {
-      liff.init({ liffId: MY_LIFF_ID }).then(() => {
-        if (!liff.isLoggedIn()) { liff.login(); } 
-        else { liff.getProfile().then(p => { lineProfile = p; document.getElementById('user-name').innerText = p.displayName; checkUserStatus(p.userId); }); }
-        fetchMasterData();
-      }).catch(e => fetchMasterData());
+      // 1. マスタと予約データを裏で取得開始
+      fetchMasterData();
 
-      fpInstance = flatpickr("#dateRange", { 
-        mode: "range", minDate: "today", dateFormat: "Y-m-d", locale: "ja", disableMobile: "true",
-        onClose: function(selectedDates) {
-          if(selectedDates.length > 0) {
-            if(selectedDates[0].getDay() === 4) { alert("木曜日は定休日のため、貸出（出発）には指定できません。"); fpInstance.clear(); return; }
-          }
-          calcTotal(); checkAvailability();
-        } 
+      // 2. LIFF (LINE) か Web かを判定
+      liff.init({ liffId: MY_LIFF_ID }).then(() => {
+        if (liff.isLoggedIn()) {
+          // LINEユーザー -> ログイン不要、即予約画面へ
+          liff.getProfile().then(p => {
+            lineProfile = p;
+            document.getElementById('user-display-name').innerText = p.displayName;
+            // 過去の利用履歴があるかチェックして自動入力
+            checkUserStatus(p.userId);
+            showScreen('booking-screen');
+          });
+        } else {
+          // Webユーザー -> ログイン画面へ (自動遷移しない)
+          document.getElementById('loading').style.display = 'none';
+          showScreen('login-screen');
+        }
+      }).catch(e => {
+        // LIFF初期化失敗(PCなど) -> ログイン画面へ
+        document.getElementById('loading').style.display = 'none';
+        showScreen('login-screen');
       });
+
+      // カレンダー等セットアップ
+      fpInstance = flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", locale: "ja", disableMobile: "true", onClose: function(sd){ if(sd.length>0&&sd[0].getDay()===4){alert("木曜日は定休日のため貸出不可です");fpInstance.clear();return;} calcTotal(); checkAvailability(); } });
       generateTimeOptions('startTime', 9, 18); generateTimeOptions('endTime', 0, 23);
     };
 
-    function fetchMasterData() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_data" }) }).then(r=>r.json()).then(d=>{ if (d.result === 'success') { masterData.categories = d.categories; masterData.options = d.options; initClassSelect(); initOptionSelect(); fetchAllReservations(); } }); }
-    function fetchAllReservations() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_reserved_ranges" }) }).then(r=>r.json()).then(d=>{ if(d.result === 'success') { allReservations = d.data; document.getElementById('loading').style.display = 'none'; document.getElementById('input-screen').style.display = 'block'; document.getElementById('price-bar').style.display = 'flex'; } }); }
-    function safeParseInt(val) { if (!val) return 0; const num = parseInt(val); return isNaN(num) ? 0 : num; }
-    function calculatePrice(rates, hours) {
-      const p4 = safeParseInt(rates.p4); const p8 = safeParseInt(rates.p8); const p24 = safeParseInt(rates.p24); const pAdd = safeParseInt(rates.pAdd);
-      if (hours <= 4) return p4; else if (hours <= 8) return p8; else if (hours <= 24) return p24; else { const extraDays = Math.ceil((hours - 24) / 24); return p24 + (pAdd * extraDays); }
+    // --- 画面切り替え ---
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      
+      // 予約画面なら価格バーを表示
+      if(id === 'booking-screen') document.getElementById('price-bar').style.display = 'flex';
+      else document.getElementById('price-bar').style.display = 'none';
+      
+      window.scrollTo(0,0);
     }
 
-    function showBikeImage() {
-      const sel = document.getElementById('bikeSelect');
-      const imgContainer = document.getElementById('bike-image-container');
-      const img = document.getElementById('bike-image');
-      if (sel.value !== "0") {
-        const url = sel.options[sel.selectedIndex].dataset.image;
-        if (url && url !== "") { img.src = url; imgContainer.style.display = "block"; } else { imgContainer.style.display = "none"; }
-      } else { imgContainer.style.display = "none"; }
-    }
-
-    function calcTotal() {
-      const dates = fpInstance.selectedDates;
-      if (dates.length === 0) return;
-      const sH = parseInt(document.getElementById('startTime').value); const eH = parseInt(document.getElementById('endTime').value);
-      const start = new Date(dates[0]); start.setHours(sH);
-      const end = new Date(dates.length > 1 ? dates[1] : dates[0]); end.setHours(eH);
-      let diffMs = end - start;
-      if (diffMs <= 0) { document.getElementById('days-display').innerText = "エラー: 日時を確認してください"; document.getElementById('totalPriceDisplay').innerText = "¥0"; return; }
-      const diffHours = diffMs / (1000 * 60 * 60);
-      document.getElementById('days-display').innerText = `利用時間: ${diffHours}時間`;
-
-      const bikeSel = document.getElementById('bikeSelect');
-      let bikeTotal = 0; let planName = "";
-      if (bikeSel.value !== "0") {
-        const bRates = bikeSel.options[bikeSel.selectedIndex].dataset;
-        bikeTotal = calculatePrice(bRates, diffHours);
-        if (diffHours <= 4) planName = "4時間料金"; else if (diffHours <= 8) planName = "8時間料金"; else if (diffHours <= 24) planName = "24時間料金"; else planName = `24時間 + 追加${Math.ceil((diffHours - 24) / 24)}日`;
-      }
-
-      let optionTotal = 0;
-      document.querySelectorAll('.option-select').forEach(sel => {
-        const qty = parseInt(sel.value);
-        if(qty > 0) { const oRates = sel.dataset; optionTotal += calculatePrice(oRates, diffHours) * qty; }
-      });
-
-      const total = bikeTotal + optionTotal;
-      document.getElementById('totalPriceDisplay').innerText = "¥" + total.toLocaleString();
-      document.getElementById('conf-plan').innerText = planName; 
-      document.getElementById('conf-hours').innerText = `${diffHours}時間`;
-      return total;
-    }
-
-    // ★カスタムモーダル表示
-    function showDesc(title, text) {
-      document.getElementById('desc-title').innerText = title;
-      document.getElementById('desc-text').innerText = text;
-      document.getElementById('descModal').style.display = 'flex';
-    }
-
-    function initOptionSelect() { 
-      const area = document.getElementById('optionArea'); area.innerHTML = ""; 
-      masterData.options.forEach(opt => { 
-        const div = document.createElement('div'); div.className = 'option-row'; 
-        const priceDisplay = safeParseInt(opt.p24).toLocaleString();
-        let helpIcon = "";
-        if(opt.desc && opt.desc !== "") {
-          // alert() ではなく showDesc() を呼ぶ
-          helpIcon = `<span class="help-icon" onclick="showDesc('${opt.name}', '${opt.desc.replace(/'/g, "\\'")}')">(?)</span>`;
+    // --- 会員機能 ---
+    function doLogin() {
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-pass').value;
+      if(!email || !pass) return alert("入力してください");
+      
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "login_member", email: email, password: pass }) })
+      .then(r => r.json()).then(d => {
+        if(d.result === 'success') {
+          currentUser = d.userData;
+          // 予約フォームに自動入力
+          document.getElementById('bk-name').value = currentUser.regName;
+          document.getElementById('bk-kana').value = currentUser.regKana;
+          document.getElementById('bk-phone').value = currentUser.regPhone;
+          document.getElementById('bk-zip').value = currentUser.regZip;
+          document.getElementById('bk-address').value = currentUser.regAddress;
+          document.getElementById('user-display-name').innerText = currentUser.regName;
+          
+          alert("ログインしました");
+          showScreen('booking-screen');
+        } else {
+          alert(d.message);
         }
-        div.innerHTML = `
-          <div class="option-label">${opt.name} ${helpIcon}</div>
-          <div class="option-price">目安: +¥${priceDisplay}/日</div>
-          <select class="option-select" 
-            data-p4="${safeParseInt(opt.p4)}" data-p8="${safeParseInt(opt.p8)}" data-p24="${safeParseInt(opt.p24)}" data-p-add="${safeParseInt(opt.pAdd)}" 
-            data-name="${opt.name}" onchange="calcTotal()">
-            <option value="0">なし</option><option value="1">1</option><option value="2">2</option>
-          </select>`; 
-        area.appendChild(div); 
-      }); 
+      });
     }
 
-    function initClassSelect() { const s = document.getElementById('classSelect'); s.innerHTML = '<option value="">クラスを選択してください</option>'; masterData.categories.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = c.name; s.appendChild(o); }); }
-    function updateBikeList(busyList = []) { 
-      const idx = document.getElementById('classSelect').value; const bs = document.getElementById('bikeSelect'); const currentVal = bs.value; 
-      bs.innerHTML = '<option value="0">選択してください</option>'; if (idx === "") { bs.disabled = true; return; } 
-      const bikes = masterData.categories[idx].bikes; 
-      bikes.forEach(b => { 
-        const o = document.createElement('option'); o.value = b.name; 
-        o.dataset.p4 = b.p4; o.dataset.p8 = b.p8; o.dataset.p24 = b.p24; o.dataset.pAdd = b.pAdd; 
-        o.dataset.image = b.image || "";
-        if (busyList.includes(b.name)) { o.disabled = true; o.textContent = `❌ ${b.name} (貸出中)`; } else { o.textContent = `${b.name}`; } bs.appendChild(o); 
-      }); 
-      bs.disabled = false; if(currentVal && !busyList.includes(currentVal)) { bs.value = currentVal; } 
-      showBikeImage(); calcTotal(); 
+    function doRegister() {
+      const d = {
+        action: "register_member",
+        name: document.getElementById('reg-name').value,
+        kana: document.getElementById('reg-kana').value,
+        email: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-pass').value,
+        phone: document.getElementById('reg-phone').value,
+        zip: document.getElementById('reg-zip').value,
+        address: document.getElementById('reg-addr').value
+      };
+      if(!d.name || !d.email || !d.password) return alert("必須項目を入力してください");
+      
+      fetch(GAS_URL, { method: 'POST', body: JSON.stringify(d) })
+      .then(r => r.json()).then(res => {
+        if(res.result === 'success') {
+          alert("登録しました！\nログインして予約へお進みください。");
+          showScreen('login-screen');
+        } else {
+          alert("エラー: " + res.message);
+        }
+      });
     }
-    function checkAvailability() {
-      const dates = fpInstance.selectedDates; if (dates.length === 0) return;
-      let sYMD = formatDateYMD(dates[0]); let eYMD = dates.length > 1 ? formatDateYMD(dates[1]) : sYMD;
-      const fullStart = new Date(`${sYMD} ${document.getElementById('startTime').value}:00`);
-      const fullEnd = new Date(`${eYMD} ${document.getElementById('endTime').value}:00`);
-      let busyBikes = [];
-      allReservations.forEach(r => { const bookedStart = new Date(r.start); const bookedEnd = new Date(r.end); if (fullStart < bookedEnd && fullEnd > bookedStart) { busyBikes.push(r.bike); } });
-      updateBikeList([...new Set(busyBikes)]); 
-    }
-    function generateTimeOptions(id, s, e) { const sel = document.getElementById(id); for(let i=s; i<=e; i++){ const o=document.createElement('option'); o.value=i; o.text=i+":00"; if(id==='startTime'&&i===10)o.selected=true; if(id==='endTime'&&i===18)o.selected=true; sel.appendChild(o); } }
-    function formatDateYMD(d){ return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; }
-    function checkUserStatus(uid){ fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"check",userId:uid})}).then(r=>r.json()).then(d=>{if(d.result==='found'){const u=d.userData;document.getElementById('regName').value=u.regName;document.getElementById('regKana').value=u.regKana;document.getElementById('regPhone').value=u.regPhone;document.getElementById('zipcode').value=u.regZip;document.getElementById('regAddress').value=u.regAddress;document.getElementById('new-user-msg').style.display='none';document.getElementById('repeat-user-msg').style.display='block';}});}
-    function searchAddress(){ const z=document.getElementById('zipcode').value; fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${z}`).then(r=>r.json()).then(d=>{if(d.results)document.getElementById('regAddress').value=d.results[0].address1+d.results[0].address2+d.results[0].address3;else alert("住所不明");}); }
+
+    // --- 予約関連 (既存ロジック統合) ---
+    function checkUserStatus(uid){ fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"check",userId:uid})}).then(r=>r.json()).then(d=>{if(d.result==='found'){const u=d.userData;document.getElementById('bk-name').value=u.regName;document.getElementById('bk-kana').value=u.regKana;document.getElementById('bk-phone').value=u.regPhone;document.getElementById('bk-zip').value=u.regZip;document.getElementById('bk-address').value=u.regAddress;}});}
     
-    function showConfirm(){ 
-      const name=document.getElementById('regName').value; const phone=document.getElementById('regPhone').value; if(!name||!phone||!document.getElementById('regAddress').value){alert("お客様情報を入力してください");return;} 
-      if(fpInstance.selectedDates.length === 0) { alert("ご利用期間を選択してください"); return; }
-      if(document.getElementById('bikeSelect').value==="0"){alert("バイクを選択してください");return;} 
-      document.getElementById('conf-name').innerText=name; document.getElementById('conf-phone').innerText=phone; document.getElementById('conf-date').innerText=document.getElementById('dateRange').value; document.getElementById('conf-time').innerText=`${document.getElementById('startTime').value}:00 〜 ${document.getElementById('endTime').value}:00`; document.getElementById('conf-bike').innerText=document.getElementById('bikeSelect').value; document.getElementById('conf-price').innerText=document.getElementById('totalPriceDisplay').innerText; let optStr=""; document.querySelectorAll('.option-select').forEach(s=>{if(s.value>0)optStr+=`${s.dataset.name}×${s.value}\n`;}); document.getElementById('conf-options').innerText=optStr||"なし"; document.getElementById('input-screen').style.display='none'; document.getElementById('price-bar').style.display='none'; document.getElementById('confirm-screen').style.display='block'; window.scrollTo(0,0); 
-    }
-    function goBack(){ document.getElementById('confirm-screen').style.display='none'; document.getElementById('input-screen').style.display='block'; document.getElementById('price-bar').style.display='flex'; }
-    function checkAgreements(){ const b=document.getElementById('finalSubmitBtn'); if(document.getElementById('checkTerms').checked&&document.getElementById('checkAge').checked){b.disabled=false;b.classList.add('active');}else{b.disabled=true;b.classList.remove('active');} }
+    function fetchMasterData() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_master_data" }) }).then(r=>r.json()).then(d=>{ if (d.result === 'success') { masterData.categories = d.categories; masterData.options = d.options; initClassSelect(); initOptionSelect(); fetchAllReservations(); } }); }
+    function fetchAllReservations() { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "get_reserved_ranges" }) }).then(r=>r.json()).then(d=>{ if(d.result === 'success') { allReservations = d.data; document.getElementById('loading').style.display='none'; } }); } // ロード完了は個別制御へ
     
-    function sendToGas(){ 
-      const btn=document.getElementById('finalSubmitBtn'); btn.disabled=true; btn.classList.add('sending'); btn.innerText="送信中... 🚀";
-      const ds=fpInstance.selectedDates; const sYMD=formatDateYMD(ds[0]); const eYMD=ds.length>1?formatDateYMD(ds[1]):sYMD;
-      const fullS = `${sYMD} ${document.getElementById('startTime').value}:00`; const fullE = `${eYMD} ${document.getElementById('endTime').value}:00`; const fullRange = `${fullS} 〜 ${fullE}`; const bikeName = document.getElementById('conf-bike').innerText;
-      fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "check_availability_final", startDate: fullS, endDate: fullE, bikeName: bikeName }) }).then(r => r.json()).then(d => {
-        if(d.result === 'error') { alert("申し訳ありません。\nタッチの差で、他のお客様の予約が入ってしまいました。\n別の日程か、別の車両をご選択ください。"); btn.innerText = "予約確定"; btn.classList.remove('sending'); btn.disabled = false; goBack(); } 
-        else { const finalData = { action:"reserve", userId:lineProfile?lineProfile.userId:"uid", displayName:lineProfile?lineProfile.displayName:"guest", regName:document.getElementById('conf-name').innerText, regKana:document.getElementById('regKana').value, regPhone:document.getElementById('conf-phone').innerText, regZip:document.getElementById('zipcode').value, regAddress:document.getElementById('regAddress').value, dateRange:fullRange, totalDays:document.getElementById('conf-hours').innerText, bikeName:bikeName, options:document.getElementById('conf-options').innerText, memo:document.getElementById('memo').value, totalPrice:document.getElementById('conf-price').innerText }; fetch(GAS_URL,{method:'POST',body:JSON.stringify(finalData)}).then(()=>{ alert("予約完了しました"); liff.closeWindow(); }).catch(e=>{ alert("エラーが発生しました"); btn.disabled=false; btn.classList.remove('sending'); btn.innerText = "予約確定"; }); }
+    function safeParseInt(val) { if (!val) return 0; const num = parseInt(val); return isNaN(num) ? 0 : num; }
+    function calculatePrice(rates, hours) { const p4=safeParseInt(rates.p4),p8=safeParseInt(rates.p8),p24=safeParseInt(rates.p24),pAdd=safeParseInt(rates.pAdd); if(hours<=4)return p4;else if(hours<=8)return p8;else if(hours<=24)return p24;else{return p24+(pAdd*Math.ceil((hours-24)/24));} }
+    
+    function showBikeImage() { const s=document.getElementById('bikeSelect'); const c=document.getElementById('bike-image-container'); const i=document.getElementById('bike-image'); if(s.value!=="0"){const u=s.options[s.selectedIndex].dataset.image; if(u){i.src=u;c.style.display="block";}else{c.style.display="none";}}else{c.style.display="none";} }
+    function showDesc(t,tx){ document.getElementById('desc-title').innerText=t; document.getElementById('desc-text').innerText=tx; document.getElementById('descModal').style.display='flex'; }
+
+    function initClassSelect() { const s=document.getElementById('classSelect'); s.innerHTML='<option value="">クラスを選択してください</option>'; masterData.categories.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=c.name;s.appendChild(o);}); }
+    function initOptionSelect() { const a=document.getElementById('optionArea'); a.innerHTML=""; masterData.options.forEach(o=>{ const div=document.createElement('div');div.className='option-row'; const help=o.desc?`<span class="help-icon" onclick="showDesc('${o.name}','${o.desc}')">(?)</span>`:""; div.innerHTML=`<div class="option-label">${o.name} ${help}</div><div class="option-price">目安: +¥${safeParseInt(o.p24).toLocaleString()}/日</div><select class="option-select" data-p4="${o.p4}" data-p8="${o.p8}" data-p24="${o.p24}" data-p-add="${o.pAdd}" data-name="${o.name}" onchange="calcTotal()"><option value="0">なし</option><option value="1">1</option><option value="2">2</option></select>`; a.appendChild(div); }); }
+    function updateBikeList(busy=[]) { const idx=document.getElementById('classSelect').value; const bs=document.getElementById('bikeSelect'); const cur=bs.value; bs.innerHTML='<option value="0">選択してください</option>'; if(idx===""){bs.disabled=true;return;} masterData.categories[idx].bikes.forEach(b=>{ const o=document.createElement('option');o.value=b.name;o.dataset.p4=b.p4;o.dataset.p8=b.p8;o.dataset.p24=b.p24;o.dataset.pAdd=b.pAdd;o.dataset.image=b.image||""; if(busy.includes(b.name)){o.disabled=true;o.textContent=`❌ ${b.name} (貸出中)`;}else{o.textContent=b.name;} bs.appendChild(o); }); bs.disabled=false; if(cur&&!busy.includes(cur))bs.value=cur; showBikeImage(); calcTotal(); }
+    
+    function checkAvailability() { const d=fpInstance.selectedDates; if(d.length===0)return; const s=new Date(d[0]); s.setHours(document.getElementById('startTime').value); const e=new Date(d.length>1?d[1]:d[0]); e.setHours(document.getElementById('endTime').value); let busy=[]; allReservations.forEach(r=>{if(s<new Date(r.end)&&e>new Date(r.start))busy.push(r.bike);}); updateBikeList([...new Set(busy)]); }
+    function calcTotal() { const d=fpInstance.selectedDates; if(d.length===0)return; const s=new Date(d[0]);s.setHours(document.getElementById('startTime').value); const e=new Date(d.length>1?d[1]:d[0]);e.setHours(document.getElementById('endTime').value); let diff=(e-s)/(1000*60*60); if(diff<=0){document.getElementById('days-display').innerText="日時エラー"; return;} document.getElementById('days-display').innerText=`利用時間: ${diff}時間`; const bs=document.getElementById('bikeSelect'); let bTotal=0,plan=""; if(bs.value!=="0"){bTotal=calculatePrice(bs.options[bs.selectedIndex].dataset,diff); if(diff<=4)plan="4時間";else if(diff<=8)plan="8時間";else if(diff<=24)plan="24時間";else plan="24時間+追加";} let oTotal=0; document.querySelectorAll('.option-select').forEach(sel=>{if(sel.value>0)oTotal+=calculatePrice(sel.dataset,diff)*sel.value;}); document.getElementById('totalPriceDisplay').innerText="¥"+(bTotal+oTotal).toLocaleString(); document.getElementById('conf-plan').innerText=plan; document.getElementById('conf-hours').innerText=diff+"時間"; }
+    
+    function generateTimeOptions(id,s,e){const el=document.getElementById(id);for(let i=s;i<=e;i++){const o=document.createElement('option');o.value=i;o.text=i+":00";if(id==='startTime'&&i===10)o.selected=true;if(id==='endTime'&&i===18)o.selected=true;el.appendChild(o);}}
+    function searchAddress(zId,aId){const z=document.getElementById(zId).value;fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${z}`).then(r=>r.json()).then(d=>{if(d.results)document.getElementById(aId).value=d.results[0].address1+d.results[0].address2+d.results[0].address3;else alert("住所不明");});}
+
+    function showConfirm(){
+      const nm=document.getElementById('bk-name').value; const ph=document.getElementById('bk-phone').value; if(!nm||!ph){alert("お客様情報を入力してください");return;}
+      if(fpInstance.selectedDates.length===0){alert("期間を選択してください");return;} if(document.getElementById('bikeSelect').value==="0"){alert("バイクを選択");return;}
+      document.getElementById('conf-name').innerText=nm; document.getElementById('conf-phone').innerText=ph;
+      document.getElementById('conf-date').innerText=document.getElementById('dateRange').value;
+      document.getElementById('conf-time').innerText=`${document.getElementById('startTime').value}:00 〜 ${document.getElementById('endTime').value}:00`;
+      document.getElementById('conf-bike').innerText=document.getElementById('bikeSelect').value;
+      document.getElementById('conf-price').innerText=document.getElementById('totalPriceDisplay').innerText;
+      let opt=""; document.querySelectorAll('.option-select').forEach(s=>{if(s.value>0)opt+=`${s.dataset.name}×${s.value}\n`;});
+      document.getElementById('conf-options').innerText=opt||"なし";
+      showScreen('confirm-screen');
+    }
+
+    function sendToGas(){
+      const btn=document.getElementById('finalSubmitBtn'); btn.disabled=true; btn.classList.add('sending'); btn.innerText="送信中...";
+      const ds=fpInstance.selectedDates; const sYMD=`${ds[0].getFullYear()}/${ds[0].getMonth()+1}/${ds[0].getDate()}`; const eDate=ds.length>1?ds[1]:ds[0]; const eYMD=`${eDate.getFullYear()}/${eDate.getMonth()+1}/${eDate.getDate()}`;
+      const fullS=`${sYMD} ${document.getElementById('startTime').value}:00`; const fullE=`${eYMD} ${document.getElementById('endTime').value}:00`;
+      const bikeName=document.getElementById('conf-bike').innerText;
+      
+      // 最終チェック
+      fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:"check_availability_final",startDate:fullS,endDate:fullE,bikeName:bikeName})})
+      .then(r=>r.json()).then(d=>{
+        if(d.result==='error'){ alert("申し訳ありません。タッチの差で予約が埋まりました。"); btn.disabled=false; btn.classList.remove('sending'); btn.innerText="予約確定"; showScreen('booking-screen'); }
+        else {
+          // 予約送信
+          const finalData = {
+            action:"reserve", 
+            userId: lineProfile ? lineProfile.userId : "uid", // LINE以外は仮ID
+            displayName: lineProfile ? lineProfile.displayName : document.getElementById('bk-name').value,
+            regName: document.getElementById('bk-name').value,
+            regKana: document.getElementById('bk-kana').value,
+            regPhone: document.getElementById('bk-phone').value,
+            regZip: document.getElementById('bk-zip').value,
+            regAddress: document.getElementById('bk-address').value,
+            email: currentUser ? currentUser.email : (document.getElementById('reg-email') ? document.getElementById('reg-email').value : ""), // メアド送信
+            dateRange: `${fullS} 〜 ${fullE}`, totalDays: document.getElementById('conf-hours').innerText,
+            bikeName: bikeName, options: document.getElementById('conf-options').innerText,
+            memo: document.getElementById('memo').value, totalPrice: document.getElementById('conf-price').innerText
+          };
+          fetch(GAS_URL,{method:'POST',body:JSON.stringify(finalData)}).then(()=>{ alert("予約完了しました"); if(lineProfile) liff.closeWindow(); else location.reload(); })
+          .catch(()=>{alert("エラー発生");btn.disabled=false;btn.classList.remove('sending');btn.innerText="予約確定";});
+        }
       });
     }
   </script>
