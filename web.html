@@ -10,7 +10,7 @@
   <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
 
   <style>
-    /* CSSスタイル (変更なし) */
+    /* CSSスタイル */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; padding: 20px; color: #333; padding-bottom: 120px; }
     .container { max-width: 480px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     h2 { text-align: center; color: #06C755; margin-bottom: 20px; font-weight: bold; font-size: 1.3rem; }
@@ -159,7 +159,6 @@
           document.getElementById('bk-kana').value = currentUser.regKana;
           document.getElementById('bk-phone').value = currentUser.regPhone;
           document.getElementById('bk-zip').value = currentUser.regZip;
-          // ★修正: ここが原因でした！
           document.getElementById('bk-address').value = currentUser.regAddress;
           showScreen('booking-screen');
         } else { alert(res.message); }
@@ -188,6 +187,7 @@
     function generateTimeOptions(id,s,e){const el=document.getElementById(id);for(let i=s;i<=e;i++){const o=document.createElement('option');o.value=i;o.text=i+":00";if(id==='startTime'&&i===10)o.selected=true;if(id==='endTime'&&i===18)o.selected=true;el.appendChild(o);}}
     function searchAddress(zId,aId){const z=document.getElementById(zId).value;fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${z}`).then(r=>r.json()).then(d=>{if(d.results)document.getElementById(aId).value=d.results[0].address1+d.results[0].address2+d.results[0].address3;else alert("住所不明");});}
 
+    // ★修正箇所：画面遷移のIDをWeb版の構造に合わせました
     function showConfirm(){
       const nm=document.getElementById('bk-name').value; const ph=document.getElementById('bk-phone').value; 
       if(!nm||!ph){alert("お客様情報を入力してください");return;}
@@ -197,9 +197,22 @@
       document.getElementById('conf-date').innerText=document.getElementById('dateRange').value;
       document.getElementById('conf-time').innerText=`${document.getElementById('startTime').value}:00 〜 ${document.getElementById('endTime').value}:00`;
       document.getElementById('conf-bike').innerText=document.getElementById('bikeSelect').value;
+      document.getElementById('conf-price').innerText=document.getElementById('totalPriceDisplay').innerText;
       let opt=""; document.querySelectorAll('.option-select').forEach(s=>{if(s.value>0)opt+=`${s.dataset.name}×${s.value}\n`;});
       document.getElementById('conf-options').innerText=opt||"なし";
-      showScreen('confirm-screen');
+      
+      // ★ここが原因でした：input-screen ではなく booking-screen を消す
+      document.getElementById('booking-screen').style.display='none';
+      document.getElementById('price-bar').style.display='none';
+      document.getElementById('confirm-screen').style.display='block';
+      window.scrollTo(0,0);
+    }
+
+    function goBack(){
+      document.getElementById('confirm-screen').style.display='none';
+      // ★ここも修正：booking-screen を表示する
+      document.getElementById('booking-screen').style.display='block';
+      document.getElementById('price-bar').style.display='flex';
     }
 
     function sendToGas(){
