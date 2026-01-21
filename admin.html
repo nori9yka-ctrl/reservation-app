@@ -2,125 +2,157 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Renta 管理システム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>レンタルバイク管理システム</title>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  
   <style>
-    /* ベーススタイル */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; padding: 0; margin: 0; color: #333; padding-bottom: 80px; }
-    h2 { color: #06C755; margin: 0; font-size: 1.2rem; }
+    /* CSSスタイル */
+    body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f9; color: #333; display: flex; height: 100vh; }
+    .sidebar { width: 250px; background-color: #343a40; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; background-color: #06C755; text-align: center; }
+    .nav-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #4b545c; transition: 0.3s; }
+    .nav-item:hover, .nav-item.active { background-color: #495057; border-left: 4px solid #06C755; }
+    .main { flex-grow: 1; padding: 20px; overflow-y: auto; }
+    .page-title { font-size: 1.5rem; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .btn { padding: 8px 16px; background: #06C755; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
+    .btn:hover { opacity: 0.9; } .btn-sm { padding: 4px 8px; font-size: 0.8rem; margin-right: 5px; } .btn-red { background: #dc3545; } .btn-print { background: #333; } .btn-blue { background: #007bff; }
+    table.admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 0.9rem; }
+    table.admin-table th, table.admin-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eee; }
+    table.admin-table th { background-color: #f8f9fa; color: #555; white-space: nowrap; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; color: white; font-weight: bold; display:inline-block; min-width:50px; text-align:center; }
+    .bg-green { background-color: #28a745; } .bg-red { background-color: #dc3545; }
+    .text-danger { color: #dc3545; font-weight:bold; } .text-warning { color: #e0a800; font-weight:bold; } .text-success { color: #28a745; }
+    .view-section { display: none; } .view-section.active { display: block; }
     
-    /* ナビゲーションバー */
-    .nav-bar { position: fixed; top: 0; left: 0; width: 100%; background: #fff; display: flex; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; }
-    .nav-item { flex: 1; text-align: center; padding: 15px 0; cursor: pointer; font-weight: bold; color: #888; border-bottom: 3px solid transparent; font-size: 0.9rem; }
-    .nav-item.active { color: #06C755; border-bottom: 3px solid #06C755; background: #f9fff9; }
-
-    /* コンテンツエリア */
-    .content-section { display: none; padding: 80px 20px 20px 20px; max-width: 900px; margin: 0 auto; }
-    .content-section.active { display: block; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* カード・リストスタイル */
-    .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
-    .res-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    .res-item:hover { background: #fafafa; }
-    .res-date { font-size: 0.8rem; color: #888; }
-    .res-name { font-weight: bold; font-size: 1.05rem; }
-    .res-bike { color: #06C755; font-size: 0.9rem; font-weight: bold; }
-    .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #eee; color: #555; margin-left: 5px; }
-
-    /* テーブルスタイル (マスタ管理用) */
-    .master-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .master-table th { text-align: left; padding: 10px; background: #f0f0f0; border-bottom: 2px solid #ddd; }
-    .master-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
-    .thumb-img { width: 50px; height: 35px; object-fit: cover; border-radius: 4px; background: #eee; }
-
-    /* ボタン */
-    .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-block; text-align: center; }
-    .btn-primary { background: #06C755; color: white; width: 100%; }
-    .btn-danger { background: #ff4b4b; color: white; font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; }
-    .btn-sm { padding: 5px 10px; font-size: 0.8rem; border-radius: 5px; }
-    .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: #06C755; color: white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; z-index: 900; }
-
-    /* モーダル */
-    #modal, #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-    .modal-content { background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 10px; max-height: 90vh; overflow-y: auto; }
+    /* モーダル共通 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-header { font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #06C755; padding-bottom: 10px; display: flex; justify-content: space-between; }
-
-    /* 詳細表示 */
-    .detail-row { margin-bottom: 10px; display: flex; border-bottom: 1px solid #f9f9f9; padding-bottom: 5px; }
-    .detail-label { width: 100px; font-weight: bold; color: #666; font-size: 0.9rem; }
-    .detail-val { flex: 1; word-break: break-all; }
     
-    /* 入力フォーム */
-    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+    .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
+    .form-group input, .form-group select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    .flex-inputs { display: flex; gap: 15px; } .flex-inputs .form-group { flex: 1; }
+    #master-details { display: none; background-color: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 20px; }
+    .detail-title { font-weight: bold; color: #856404; margin-bottom: 10px; border-bottom: 1px dashed #856404; padding-bottom: 5px; font-size: 1.1rem; }
+    
+    /* 詳細情報表示用 */
+    .detail-row { display: flex; border-bottom: 1px solid #eee; padding: 8px 0; }
+    .detail-label { width: 120px; font-weight: bold; color: #666; }
+    .detail-val { flex: 1; }
     
     /* メール・電話エリア */
-    .action-area { margin-top: 20px; background: #f8f8f8; padding: 15px; border-radius: 8px; }
-    .action-title { font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #06C755; }
-    .phone-display { font-size: 1.5rem; font-weight: bold; color: #333; text-align: center; background: white; padding: 10px; border-radius: 5px; border: 2px solid #eee; letter-spacing: 1px; }
+    .action-area { margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+    .action-title { font-weight: bold; margin-bottom: 10px; color: #06C755; display: flex; align-items: center; gap: 5px; }
+    .phone-display { font-size: 1.5rem; font-weight: bold; color: #333; text-align: center; background: white; padding: 10px; border-radius: 5px; border: 2px solid #ddd; letter-spacing: 1px; }
+    .mail-history { margin-top: 10px; max-height: 200px; overflow-y: scroll; border: 1px solid #ddd; padding: 0; background: white; border-radius: 4px; }
+    .mail-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    .mail-date { color: #888; font-size: 0.75rem; margin-bottom: 2px; }
+    .mail-subject { font-weight: bold; color: #333; }
+    .mail-body { font-size: 0.85rem; color: #555; margin-top: 4px; white-space: pre-wrap; }
+    .mail-unread { background: #e6fffa; border-left: 4px solid #06C755; }
 
-    .mail-history { margin-top: 10px; max-height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 5px; background: white; }
-    .mail-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-    .mail-unread { background: #e6fffa; border-left: 3px solid #06C755; }
+    /* 貸渡証CSS (変更なし) */
+    .sheet-wrapper { background: #555; padding: 20px; display: flex; justify-content: center; }
+    .sheet-container { background: white; width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; line-height: 1.3; color: #000; }
+    .sheet-header { border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .sheet-h1 { font-size: 18pt; margin: 0; font-weight: bold; }
+    .header-info { text-align: right; font-size: 10pt; }
+    .sheet-main { display: flex; gap: 15px; } .col-left, .col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .box-title { background-color: #333; color: #fff; font-weight: bold; padding: 3px 5px; font-size: 10pt; text-align: center; margin-bottom: 3px; -webkit-print-color-adjust: exact; }
+    table.sheet-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+    table.sheet-table th, table.sheet-table td { border: 1px solid #000; padding: 3px; }
+    table.sheet-table th { background-color: #f0f0f0; text-align: center; font-weight: normal; -webkit-print-color-adjust: exact; }
+    .sheet-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; background: rgba(255,255,0,0.05); font-family: inherit; font-size: inherit; padding: 0 2px; outline: none; box-sizing: border-box; }
+    .sheet-input.right { text-align: right; }
+    .label-cell { width: 60px; background: #eee; text-align: center; font-weight: bold; -webkit-print-color-adjust: exact; }
+    .terms-box { font-size: 7pt; line-height: 1.25; border: 1px solid #000; padding: 5px; flex-grow: 1; }
+    .terms-list { padding-left: 15px; margin: 0; } .terms-list li { margin-bottom: 2px; }
+    .exterior-msg { font-size: 9pt; font-weight: bold; text-align: center; padding: 8px; border: 2px dashed #999; margin-top: 5px; background-color: #fafafa; -webkit-print-color-adjust: exact; }
+    .check-item { text-align: left !important; padding-left: 5px; font-size: 8pt; }
+    .shop-stamp { width: 55px; height: 55px; border: 1px solid #ccc; color: #ccc; display: flex; align-items: center; justify-content: center; float: right; margin-left: 10px; font-size: 8pt; }
+    .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 200px; height: 20px; }
+    @media print { body { background: white; display: block; height: auto; margin: 0; } .sidebar, .no-print, .modal, .page-title, .nav-item { display: none !important; } .main { padding: 0; overflow: visible; } .sheet-wrapper { background: white; padding: 0; display: block; } .sheet-container { box-shadow: none; margin: 0; padding: 10mm; width: 100%; max-width: 100%; } .sheet-input { background: transparent !important; border-bottom: none !important; } .view-section { display: none; } #sheet-view { display: block !important; } }
   </style>
 </head>
 <body>
-
-  <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('res')">予約一覧</div>
-    <div class="nav-item" onclick="switchTab('bikes')">車両マスタ</div>
-    <div class="nav-item" onclick="switchTab('options')">オプション</div>
+  <div class="sidebar">
+    <div class="sidebar-header">管理画面</div>
+    <div class="nav-item active" onclick="switchView('bookings')">📋 予約リスト</div>
+    <div class="nav-item" onclick="switchView('vehicles')">🏍 車両管理</div>
+    <div class="nav-item" onclick="switchView('calendar')">📅 カレンダー</div>
+    <div class="nav-item" onclick="switchView('settings')">⚙️ 料金設定</div>
+    <div class="nav-item" onclick="switchView('options')">🔧 オプション管理</div>
   </div>
 
-  <div id="sec-res" class="content-section active">
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h2>予約リスト</h2>
-        <button class="btn btn-sm" style="background:#ddd;" onclick="loadBookings()">更新</button>
-      </div>
-      <div id="list-area">読み込み中...</div>
-    </div>
-  </div>
-
-  <div id="sec-bikes" class="content-section">
-    <div class="card">
-      <h2>車両リスト</h2>
-      <div style="overflow-x:auto;">
-        <table class="master-table">
-          <thead><tr><th>画像</th><th>車両名</th><th>クラス</th><th>操作</th></tr></thead>
-          <tbody id="bike-list-body"></tbody>
+  <div class="main">
+    <div id="bookings" class="view-section active">
+      <h2 class="page-title">全予約リスト</h2>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <input type="text" placeholder="名前や予約IDで検索..." style="padding:8px; border:1px solid #ddd; width:300px;">
+          <button class="btn" onclick="fetchData()">🔄 最新情報に更新</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>日時</th><th>名前</th><th>バイク</th><th>期間</th><th>操作</th></tr></thead>
+          <tbody id="booking-list-body"></tbody>
         </table>
       </div>
-      <div style="text-align:center; padding:20px; color:#888;" id="bike-loading">読み込み中...</div>
     </div>
-    <div class="fab" onclick="showAddBikeModal()">＋</div>
+
+    <div id="vehicles" class="view-section"><h2 class="page-title">車両台帳・メンテナンス</h2><div class="card"><table class="admin-table"><thead><tr><th>ID</th><th>車両名/No.</th><th>距離</th><th>自賠責</th><th>車検</th><th>オイル</th><th>状態</th><th>操作</th></tr></thead><tbody id="vehicle-list-body"></tbody></table></div></div>
+    
+    <div id="calendar" class="view-section"><h2 class="page-title">予約カレンダー</h2><div class="card"><div id='calendar-el'></div></div></div>
+    
+    <div id="settings" class="view-section"><h2 class="page-title">バイク登録・料金設定</h2><div class="card"><div style="text-align:right; margin-bottom:10px;"><button class="btn" onclick="openMasterModal()">＋ 新規バイク登録</button></div><table class="admin-table"><thead><tr><th>カテゴリ</th><th>バイク名</th><th>適用料金クラス</th><th>操作</th></tr></thead><tbody id="master-list-body"></tbody></table></div></div>
+    
+    <div id="options" class="view-section"><h2 class="page-title">オプション品管理</h2><div class="card"><div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;"><input type="text" id="opt-name" placeholder="オプション名 (例: ヘルメット)" style="flex:2;"><div class="flex-inputs" style="flex:4;"><input type="number" id="opt-p4" placeholder="4H"><input type="number" id="opt-p8" placeholder="8H"><input type="number" id="opt-p24" placeholder="24H"><input type="number" id="opt-pAdd" placeholder="以降"></div><button class="btn" onclick="addOption()">＋ 追加</button></div><table class="admin-table"><thead><tr><th>オプション名</th><th>24時間料金(目安)</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table></div></div>
+
+    <div id="sheet-view" class="view-section">
+      <div class="no-print" style="position:sticky; top:0; z-index:100; background:#333; padding:10px; text-align:center; color:white;">
+        <span style="margin-right:20px;">貸渡証プレビュー</span>
+        <button class="btn btn-print" onclick="window.print()" style="border:1px solid white;">🖨 印刷する</button>
+        <button class="btn" onclick="saveSheetData()" id="btn-save">💾 内容を保存</button>
+        <button class="btn" onclick="switchView('bookings')" style="background:#666;">戻る</button>
+      </div>
+      <div class="sheet-wrapper">
+        <div class="sheet-container">
+            <header class="sheet-header"><div class="sheet-h1">レンタルバイク貸渡証 兼 領収書</div><div class="header-info">契約日：<span id="sheet-today"></span><br>受付No.：<span id="sheet-id" style="font-weight:bold;"></span><input type="hidden" id="sheet-rowIndex"></div></header>
+            <div class="sheet-main">
+                <div class="col-left">
+                    <div><div class="box-title">借受人・運転者（ご請求先）</div><table class="sheet-table"><tr><td class="label-cell">お名前</td><td><input type="text" class="sheet-input" id="sheet-name" style="font-size:11pt;"></td></tr><tr><td class="label-cell" rowspan="2">ご住所</td><td style="border-bottom:none;">〒 <input type="text" class="sheet-input" id="sheet-zip" style="width:80px; display:inline-block;"></td></tr><tr><td style="height:30px; border-top:none;"><input type="text" class="sheet-input" id="sheet-address"></td></tr><tr><td class="label-cell">連絡先</td><td>携帯：<input type="text" class="sheet-input" id="sheet-phone" style="width:60%;"></td></tr><tr><td class="label-cell">免許証</td><td>No. <input type="text" class="sheet-input" id="sheet-license" style="width:70%;"></td></tr></table></div>
+                    <div><div class="box-title">ご利用料金（税込）</div><table class="sheet-table"><thead><tr><th style="background:#ddd; width:70%;">項目</th><th style="width:30%;">金額</th></tr></thead><tbody id="fee-table-body"></tbody></table><div style="text-align:right; font-size:8.5pt; margin-top:3px; border-bottom:1px dashed #ccc;"><strong>決済方法：</strong> □ 現金　□ カード　□ 電子決済</div></div>
+                    <div style="flex-grow:1;"><div class="box-title">注意事項（重要）</div><div class="terms-box"><ul class="terms-list"><li><strong>事故・故障時：</strong>直ちに運転を中止し、負傷者救護、警察・当店へ連絡してください。</li><li><strong>駐車違反：</strong>確認標章が貼付された場合、直ちに管轄警察署へ出頭し反則金を納付してください。</li><li><strong>禁止行為：</strong>無断延長、又貸し、飲酒運転、競技使用等は固く禁じます。</li><li><strong>管理責任：</strong>使用中の車両管理（鍵紛失・盗難・イタズラ等）はお客様の責任となります。</li></ul></div></div>
+                    <div><div class="box-title">車両外装チェック</div><div class="exterior-msg">出発前に車両の傷・凹み等を確認し、<br><span style="color:#d00;">スマホ等で必ず写真を撮影・保存してください。</span></div></div>
+                    <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px; font-size: 8.5pt;"><div class="shop-stamp">印</div><strong>貸渡人：Renta-レンタ-(メカニックキャラバン)</strong><br>登録番号：T5810920497278<br>住所：和歌山県田辺市上の山1丁目10-12<br>電話：0739-34-2068</div>
+                </div>
+                <div class="col-right">
+                    <div><div class="box-title">ご利用車両・日時</div><table class="sheet-table"><tr><th style="width:20%;">車種名</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-bike"></td></tr><tr><th style="width:20%;">登録No.</th><td colspan="3"><input type="text" class="sheet-input" id="sheet-plate"></td></tr></table><table class="sheet-table" style="margin-top:-1px;"><tr><th style="width:20%;">貸渡日時</th><td><input type="text" class="sheet-input" id="sheet-start-date"></td></tr><tr><th>返却日時</th><td><input type="text" class="sheet-input" id="sheet-end-date"></td></tr></table></div>
+                    <div><div class="box-title">保険・補償内容（約款第27条）</div><table class="sheet-table"><tr><th width="20%">対人補償</th><td>無制限</td><th width="20%">対物補償</th><td>無制限 <span style="font-size:7.5pt;">(免責5万)</span></td></tr><tr><th>人身傷害</th><td>1名500万<br><span style="color:#d00;font-size:7pt;">(125cc以下対象外)</span></td><th>車両保険</th><td style="color:#d00;font-weight:bold;">加入なし</td></tr></table><div style="font-size:8pt; margin-top:3px; border:1px solid #ccc; padding:3px; background-color:#fffdfd;"><strong>NOC (ノンオペレーションチャージ)</strong><br>自走して返却された場合：20,000円 ／ 自走不能な場合：50,000円</div></div>
+                    <div><div class="box-title" style="background-color:#d00;">【要確認】運行前点検表</div><table class="sheet-table"><thead><tr><th colspan="2">点検項目</th><th style="width:30px;">✓</th></tr></thead><tbody><tr><th rowspan="2" width="15%">ブレーキ</th><td class="check-item">ブレーキの遊び、効き具合</td><td>□</td></tr><tr><td class="check-item">ブレーキ液の量、パッドの摩耗</td><td>□</td></tr><tr><th rowspan="2">タイヤ</th><td class="check-item">空気圧、亀裂、溝の深さ</td><td>□</td></tr><tr><td class="check-item">チェーンの張り、注油状態</td><td>□</td></tr><tr><th rowspan="2">エンジン</th><td class="check-item">オイルの量、漏れ</td><td>□</td></tr><tr><td class="check-item">異音、始動性、加速の状態</td><td>□</td></tr><tr><th rowspan="2">保安部品</th><td class="check-item">ライト、ウインカーの点灯</td><td>□</td></tr><tr><td class="check-item">ブレーキランプ、ホーン</td><td>□</td></tr></tbody></table></div>
+                    <div style="display:flex; gap:10px;"><div style="flex:1;"><div class="box-title">走行距離</div><table class="sheet-table"><tr><th style="font-size:8pt;">出発時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-startKm" style="width:60px;"> km</td></tr><tr><th style="font-size:8pt;">返却時</th><td style="text-align:right;"><input type="text" class="sheet-input right" id="sheet-endKm" style="width:60px;"> km</td></tr></table></div><div style="flex:1;"><div class="box-title">燃料確認</div><div style="border:1px solid #000; height:50px; padding:5px; font-size:9pt;"><div><strong>出発：</strong> □ 満タン</div><div style="margin-top:5px;"><strong>返却：</strong> □ 満タン</div></div></div></div>
+                    <div style="margin-top:auto; border-top:2px solid #000; padding-top:10px; text-align:right;"><p style="text-align:left; font-size:8.5pt; margin:0 0 20px 0;">私は、貸渡約款・保険補償制度・注意事項を確認し、車両を点検の上、異常のない事を確認して借り受けます。<br>また、上記金額を正に領収いたしました。</p><div><span style="font-size:11pt; font-weight:bold;">借受人 ご署名：</span><span class="sign-line"></span></div></div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div id="sec-options" class="content-section">
-    <div class="card">
-      <h2>オプションリスト</h2>
-      <table class="master-table">
-        <thead><tr><th>名称</th><th>24h価格</th><th>操作</th></tr></thead>
-        <tbody id="opt-list-body"></tbody>
-      </table>
-      <div style="text-align:center; padding:20px; color:#888;" id="opt-loading">読み込み中...</div>
-    </div>
-    <div class="fab" onclick="showAddOptModal()">＋</div>
-  </div>
-
-
-  <div id="modal">
+  <div id="customerModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <span>予約詳細</span>
-        <span style="cursor:pointer;" onclick="closeModal('modal')">×</span>
+        <span>お客様情報 & 連絡</span>
+        <span style="cursor:pointer; font-size:1.5rem;" onclick="document.getElementById('customerModal').style.display='none'">×</span>
       </div>
-      <div id="modal-body"></div>
-      
+      <div id="cust-body"></div>
+
       <div class="action-area">
-        <div class="action-title">📩 受信メール履歴</div>
+        <div class="action-title">📩 受信メール履歴 (最新5件)</div>
         <div id="mail-list" class="mail-history">読み込み中...</div>
-        <button class="btn btn-sm" style="background:#ddd; width:100%; margin-top:5px;" onclick="loadMails()">更新</button>
+        <button class="btn btn-sm" style="background:#ddd; width:100%; margin-top:5px;" onclick="loadMails()">再読み込み</button>
       </div>
 
       <div class="action-area">
@@ -130,37 +162,28 @@
       </div>
 
       <div class="action-area">
-        <div class="action-title">✉️ メール送信</div>
+        <div class="action-title">✉️ メールを送信</div>
         <div id="email-form">
           <input type="text" id="mail-subject" placeholder="件名" value="【Renta】ご予約について">
-          <textarea id="mail-body" placeholder="本文..."></textarea>
-          <button class="btn btn-primary" onclick="sendMail()">送信する</button>
+          <textarea id="mail-body" placeholder="本文を入力..." style="height:100px;"></textarea>
+          <button class="btn" onclick="sendMail()">送信する</button>
         </div>
-        <div id="no-email-msg" style="color:red; display:none;">※メールアドレス未登録</div>
+        <div id="no-email-msg" style="color:red; display:none; text-align:center;">※メールアドレスが登録されていません</div>
       </div>
     </div>
   </div>
 
-
-  <div id="editModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <span id="edit-title">追加</span>
-        <span style="cursor:pointer;" onclick="closeModal('editModal')">×</span>
-      </div>
-      <div id="edit-form-container"></div>
-    </div>
-  </div>
-
+  <div id="masterModal" class="modal"><div class="modal-content"><h3 id="master-title">バイク情報</h3><input type="hidden" id="master-rowIndex"><div class="form-group"><label>カテゴリ</label><select id="master-category"><option value="原付(50cc)">原付(50cc)</option><option value="原付二種(125cc)">原付二種(125cc)</option><option value="軽二輪(250cc)">軽二輪(250cc)</option><option value="中型(400cc)">中型(400cc)</option><option value="大型(Over750cc)">大型(Over750cc)</option></select></div><div class="form-group"><label>バイク名 <span style="color:red;">*</span></label><input type="text" id="master-name"></div><div class="form-group"><label>適用料金クラス</label><select id="master-class"></select></div><div class="form-group" style="border-top:1px dashed #ccc; padding-top:10px;"><label>車両画像</label><div style="display:flex; gap:10px; align-items:center;"><input type="file" id="image-upload" accept="image/*" style="width:auto;"><button type="button" class="btn btn-sm" onclick="resizeAndUpload()">アップロード</button></div><p style="font-size:0.8rem; color:#666; margin-top:5px;">※画像を選択して「アップロード」を押すとURLが生成されます。</p><input type="text" id="master-image" placeholder="画像URL (自動入力)" style="background:#f0f0f0;" readonly></div><div id="master-details"><div class="detail-title">▼ 【必須】車両管理データの入力</div><div class="form-group"><label>ナンバー <span style="color:red;">*</span></label><input type="text" id="new-plate"></div><div class="flex-inputs"><div class="form-group"><label>距離</label><input type="number" id="new-km" value="0"></div><div class="form-group"><label>オイル</label><input type="number" id="new-oil" value="3000"></div></div><div class="flex-inputs"><div class="form-group"><label>自賠責</label><input type="date" id="new-insurance"></div><div class="form-group"><label>車検</label><input type="date" id="new-inspection"></div></div></div><div style="text-align:right; margin-top:15px;"><button class="btn" style="background:#999;" onclick="document.getElementById('masterModal').style.display='none'">閉じる</button><button class="btn" onclick="saveMaster()">保存</button></div></div></div>
+  
+  <div id="vehicleModal" class="modal"><div class="modal-content"><h3>車両編集</h3><input type="hidden" id="vehicle-id"><div id="vehicle-name-display" style="font-weight:bold; margin-bottom:10px;"></div><div class="form-group"><label>ナンバー</label><input type="text" id="v-plate"></div><div class="flex-inputs"><div class="form-group"><label>距離</label><input type="number" id="v-km"></div><div class="form-group"><label>次回オイル</label><input type="number" id="v-oil"></div></div><div class="flex-inputs"><div class="form-group"><label>自賠責</label><input type="date" id="v-insurance"></div><div class="form-group"><label>車検</label><input type="date" id="v-inspection"></div></div><div class="form-group"><label>状態</label><select id="v-status"><option value="active">貸出可</option><option value="maintenance">メンテ中</option></select></div><div style="text-align:right; margin-top:15px;"><button class="btn" style="background:#999;" onclick="document.getElementById('vehicleModal').style.display='none'">キャンセル</button><button class="btn" onclick="saveVehicle()">更新</button></div></div></div>
 
   <script>
     // ★重要：GASのURLをここに貼る
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
-
-    let currentData = null;
-    let priceClasses = []; // 料金クラスリスト
-
-    // 通信共通関数
+    
+    let currentBookings=[]; let currentVehicles=[]; let masterBikes=[]; let optionList=[]; let priceClasses=[]; let calendar; let currentData=null;
+    
+    // 通信共通関数 (Fetch)
     function callGas(action, params = {}) {
       return fetch(GAS_URL, {
         method: 'POST',
@@ -168,72 +191,87 @@
       }).then(response => response.json());
     }
 
-    window.onload = function() {
-      loadBookings(); // 初期表示
-      // 料金クラスだけ先に取っておく
-      callGas("get_price_classes").then(res => { if(res.result==='success') priceClasses = res.data; });
-    };
+    document.addEventListener('DOMContentLoaded', ()=>{ fetchData(); fetchPriceClasses(); fetchOptionList(); fetchMasterList(); var cEl=document.getElementById('calendar-el'); calendar = new FullCalendar.Calendar(cEl,{ initialView:'dayGridMonth', locale:'ja', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' } }); calendar.render(); });
+    
+    function switchView(id){ document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='calendar') setTimeout(()=>calendar.render(),100); if(id==='settings') fetchMasterList(); if(id==='options') fetchOptionList(); if(id==='vehicles') fetchData(); }
+    
+    function fetchData(){ 
+      // ★修正：get_bookings_admin を呼んでメールアドレスも取得する
+      callGas("get_bookings_admin").then(d=>{if(d.result==='success'){currentBookings=d.data;renderBookingList(d.data);updateCalendar(d.data);}}); 
+      callGas("get_vehicles").then(d=>{if(d.result==='success'){currentVehicles = d.data; renderVehicleList(d.data);}}); 
+    }
 
-    // --- タブ切り替え ---
-    function switchTab(tab) {
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+    function resizeAndUpload() { const fileInput = document.getElementById('image-upload'); if(fileInput.files.length === 0) return alert("画像を選択してください"); const file = fileInput.files[0]; const reader = new FileReader(); const btn = fileInput.nextElementSibling; const originalText = btn.innerText; btn.innerText = "処理中..."; btn.disabled = true; reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); const maxW = 800; let w = img.width; let h = img.height; if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; } canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h); const dataUrl = canvas.toDataURL('image/jpeg', 0.8); callGas("upload_image", { imageData: dataUrl, mimeType: "image/jpeg", fileName: file.name }).then(d => { btn.innerText = originalText; btn.disabled = false; if(d.result === 'success') { document.getElementById('master-image').value = d.url; alert("アップロード完了！"); } else { alert("アップロード失敗: " + d.message); } }); }; img.src = e.target.result; }; reader.readAsDataURL(file); }
+    
+    function clean(str) { return String(str || "").trim(); }
+    function safeParseInt(val) { const n = parseInt(val); return isNaN(n) ? 0 : n; }
+    function calculatePrice(rates, hours) { const p4 = safeParseInt(rates.p4); const p8 = safeParseInt(rates.p8); const p24 = safeParseInt(rates.p24); const pAdd = safeParseInt(rates.pAdd); if (hours <= 4) return p4; else if (hours <= 8) return p8; else if (hours <= 24) return p24; else { const extraDays = Math.ceil((hours - 24) / 24); return p24 + (pAdd * extraDays); } }
+    
+    // --- 貸渡証生成 ---
+    function openSheet(id){
+      const b=currentBookings.find(x=>x.rowIndex == id || x.id == id); if(!b)return;
+      document.getElementById('sheet-today').innerText=new Date().toLocaleDateString();document.getElementById('sheet-id').innerText=b.id || "R-"+b.rowIndex;document.getElementById('sheet-rowIndex').value=b.rowIndex;document.getElementById('sheet-name').value=b.name;document.getElementById('sheet-zip').value=b.zip||"";document.getElementById('sheet-address').value=b.address;document.getElementById('sheet-phone').value=b.phone;document.getElementById('sheet-license').value=b.license||"";document.getElementById('sheet-bike').value=b.bike;
+      const bName=clean(b.bike); const v=currentVehicles.find(v=>clean(v.name)===bName);
+      document.getElementById('sheet-startKm').value=b.startKm||(v?v.km:""); document.getElementById('sheet-plate').value=v?v.plate:""; document.getElementById('sheet-endKm').value=b.endKm||"";
+      let startStr="",endStr=""; const range=b.dateRange||b.range||""; if(range.includes("〜")){const p=range.split("〜");startStr=p[0].trim();endStr=p[1].trim();}else{startStr=range;endStr=range;}
+      document.getElementById('sheet-start-date').value=startStr; document.getElementById('sheet-end-date').value=endStr;
       
-      if(tab === 'res') {
-        document.querySelector('.nav-item:nth-child(1)').classList.add('active');
-        document.getElementById('sec-res').classList.add('active');
-        loadBookings();
-      } else if(tab === 'bikes') {
-        document.querySelector('.nav-item:nth-child(2)').classList.add('active');
-        document.getElementById('sec-bikes').classList.add('active');
-        loadMasters();
-      } else {
-        document.querySelector('.nav-item:nth-child(3)').classList.add('active');
-        document.getElementById('sec-options').classList.add('active');
-        loadOptions();
-      }
-    }
-
-    // ==========================================
-    // 1. 予約管理ロジック
-    // ==========================================
-    function loadBookings() {
-      document.getElementById('list-area').innerHTML = '<div style="text-align:center; padding:20px;">読み込み中...</div>';
-      callGas("get_bookings_admin").then(res => {
-        if(res.result !== 'success') return alert("エラー");
-        const list = document.getElementById('list-area');
-        list.innerHTML = "";
-        res.data.forEach(d => {
-          const div = document.createElement('div');
-          div.className = 'res-item';
-          div.innerHTML = `
-            <div class="res-info">
-              <div class="res-date">${d.date} | ${d.range}</div>
-              <div class="res-name">${d.name} 様 <span class="status-badge">${d.status}</span></div>
-              <div class="res-bike">🏍 ${d.bike}</div>
-            </div>
-            <div style="color:#ccc;">＞</div>
-          `;
-          div.onclick = () => openBookingModal(d);
-          list.appendChild(div);
+      const startDate=new Date(startStr); const endDate=new Date(endStr);
+      let diffMs=endDate-startDate; if(diffMs<0)diffMs=0; const diffHours=diffMs/(1000*60*60);
+      const tbody=document.getElementById('fee-table-body'); let rows="";
+      let bikePrice=0; const bikeData=masterBikes.find(m=>clean(m.name)===bName);
+      if(bikeData){bikePrice=calculatePrice(bikeData,diffHours);rows+=`<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right" value="¥${bikePrice.toLocaleString()}"></td></tr>`;}else{rows+=`<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right"></td></tr>`;}
+      if(b.options&&b.options!=="なし"){
+        const lines=b.options.split('\n');
+        lines.forEach(line=>{
+          if(!line.trim())return;
+          const match=line.match(/(.*)×(\d+)/);
+          if(match){
+            const optName=clean(match[1]); const qty=parseInt(match[2]);
+            const optData=optionList.find(o=>clean(o.name)===optName);
+            if(optData){ const price=calculatePrice(optData,diffHours)*qty; rows+=`<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right" value="¥${price.toLocaleString()}"></td></tr>`; }
+            else{rows+=`<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right"></td></tr>`;}
+          }
         });
-      }).catch(e => alert("通信エラー"));
+      }
+      rows+=`<tr><td style="text-align:left; padding-left:5px;">その他</td><td><input type="text" class="sheet-input right"></td></tr><tr style="font-weight:bold; border-top:2px double #000;"><td style="text-align:center; background:#eee;">合計</td><td><input type="text" class="sheet-input right" id="sheet-total-display" value="${b.price}" style="font-weight:bold;"></td></tr>`;
+      tbody.innerHTML=rows;
+      switchView('sheet-view');window.scrollTo(0,0);
     }
 
-    function openBookingModal(d) {
+    function saveSheetData(){const d={action:"update_booking",rowIndex:document.getElementById('sheet-rowIndex').value,name:document.getElementById('sheet-name').value,phone:document.getElementById('sheet-phone').value,address:document.getElementById('sheet-address').value,license:document.getElementById('sheet-license').value,startKm:document.getElementById('sheet-startKm').value,endKm:document.getElementById('sheet-endKm').value,bikeName:document.getElementById('sheet-bike').value};const btn=document.getElementById('btn-save');btn.innerText="保存中...";callGas("update_booking",d).then(d=>{btn.innerText="💾 内容を保存";if(d.result==='success')alert("保存しました！");});}
+    
+    // --- 予約リスト描画 (新機能ボタン追加) ---
+    function renderBookingList(l){
+      let h="";
+      l.forEach(b=>{
+        h+=`<tr>
+          <td>${b.date}</td>
+          <td>${b.name}</td>
+          <td>${b.bike}</td>
+          <td>${b.range || b.dateRange}</td>
+          <td>
+            <button class="btn btn-sm btn-blue" onclick='openCustomerModal(${JSON.stringify(b).replace(/'/g, "&#39;")})'>詳細/メール</button>
+            <button class="btn btn-sm" onclick="openSheet('${b.rowIndex}')">📝 貸渡証</button>
+          </td>
+        </tr>`;
+      });
+      document.getElementById('booking-list-body').innerHTML=h;
+    }
+
+    // --- ★新機能：顧客詳細 & メールモーダル ---
+    function openCustomerModal(d) {
       currentData = d;
-      const b = document.getElementById('modal-body');
+      const b = document.getElementById('cust-body');
       b.innerHTML = `
-        <div class="detail-row"><div class="detail-label">名前</div><div class="detail-val">${d.name}</div></div>
-        <div class="detail-row"><div class="detail-label">電話</div><div class="detail-val">${d.phone}</div></div>
+        <div class="detail-row"><div class="detail-label">お名前</div><div class="detail-val">${d.name}</div></div>
+        <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-val">${d.phone}</div></div>
         <div class="detail-row"><div class="detail-label">住所</div><div class="detail-val">${d.address}</div></div>
-        <div class="detail-row"><div class="detail-label">期間</div><div class="detail-val">${d.range}</div></div>
-        <div class="detail-row"><div class="detail-label">車両</div><div class="detail-val">${d.bike}</div></div>
-        <div class="detail-row"><div class="detail-label">金額</div><div class="detail-val">${d.price}</div></div>
-        <div class="detail-row"><div class="detail-label">備考</div><div class="detail-val">${d.memo || '-'}</div></div>
+        <div class="detail-row"><div class="detail-label">メール</div><div class="detail-val">${d.email || '(未登録)'}</div></div>
+        <div class="detail-row"><div class="detail-label">備考</div><div class="detail-val">${d.memo || 'なし'}</div></div>
       `;
       
-      // ★修正箇所：電話番号を表示のみにする
+      // 電話番号表示 (発信なし)
       document.getElementById('phone-display').innerText = d.phone;
 
       // メール制御
@@ -245,28 +283,28 @@
       } else {
         document.getElementById('email-form').style.display = 'none';
         document.getElementById('no-email-msg').style.display = 'block';
-        document.getElementById('mail-list').innerHTML = '<div style="padding:10px; color:#888;">アドレスなし</div>';
+        document.getElementById('mail-list').innerHTML = '<div style="padding:10px; color:#888;">メールアドレスがありません</div>';
       }
-      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('customerModal').style.display = 'flex';
     }
 
     function loadMails() {
       const area = document.getElementById('mail-list');
-      area.innerHTML = '検索中...';
+      area.innerHTML = '読み込み中...';
       callGas("get_customer_emails", { email: currentData.email }).then(res => {
         if(res.result === 'success') {
-          if(res.data.length === 0) area.innerHTML = '<div style="padding:10px; color:#888;">履歴なし</div>';
+          if(res.data.length === 0) area.innerHTML = '<div style="padding:10px; color:#888;">受信履歴はありません</div>';
           else {
             area.innerHTML = "";
             res.data.forEach(m => {
               const div = document.createElement('div');
               div.className = 'mail-item' + (m.isUnread ? ' mail-unread' : '');
-              div.innerHTML = `<div style="font-size:0.7rem; color:#888;">${m.date}</div><div style="font-weight:bold;">${m.subject}</div><div style="font-size:0.8rem;">${m.body}</div>`;
+              div.innerHTML = `<div class="mail-date">${m.date}</div><div class="mail-subject">${m.subject}</div><div class="mail-body">${m.body}</div>`;
               area.appendChild(div);
             });
           }
-        } else { area.innerHTML = 'エラー'; }
-      });
+        } else { area.innerHTML = '読み込みエラー'; }
+      }).catch(e => { area.innerHTML = '通信エラー'; });
     }
 
     function sendMail() {
@@ -274,150 +312,25 @@
       const sub = document.getElementById('mail-subject').value;
       const body = document.getElementById('mail-body').value;
       callGas("send_custom_email", { to: currentData.email, subject: sub, body: body }).then(r => {
-        if(r.result === 'success') { alert("送信完了"); document.getElementById('modal').style.display='none'; }
-        else alert("失敗: "+r.message);
+        if(r.result === 'success') { alert("送信しました！"); document.getElementById('customerModal').style.display='none'; } 
+        else { alert("送信エラー: " + r.message); }
       });
     }
 
-    // ==========================================
-    // 2. 車両マスタ管理ロジック
-    // ==========================================
-    function loadMasters() {
-      document.getElementById('bike-loading').style.display = 'block';
-      document.getElementById('bike-list-body').innerHTML = '';
-      callGas("get_master_list").then(res => {
-        document.getElementById('bike-loading').style.display = 'none';
-        const tb = document.getElementById('bike-list-body');
-        if(res.result === 'success') {
-          res.data.forEach(b => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td><img src="${b.image || 'https://via.placeholder.com/50'}" class="thumb-img"></td>
-              <td>${b.name}<br><span style="font-size:0.7rem; color:#888;">${b.category}</span></td>
-              <td>${b.className}</td>
-              <td><button class="btn btn-danger btn-sm" onclick="delMaster(${b.rowIndex})">削除</button></td>
-            `;
-            tb.appendChild(tr);
-          });
-        }
-      });
-    }
-
-    function showAddBikeModal() {
-      document.getElementById('edit-title').innerText = "車両を追加";
-      let opts = "";
-      priceClasses.forEach(p => opts += `<option value="${p.name}">${p.name}</option>`);
-      
-      document.getElementById('edit-form-container').innerHTML = `
-        <label>カテゴリ (例: HONDA)</label><input type="text" id="in-cat">
-        <label>車両名</label><input type="text" id="in-name">
-        <label>料金クラス</label><select id="in-class">${opts}</select>
-        <label>画像</label><input type="file" id="in-file">
-        <button class="btn btn-primary" onclick="submitBike()">登録する</button>
-      `;
-      document.getElementById('editModal').style.display = 'flex';
-    }
-
-    function submitBike() {
-      const cat = document.getElementById('in-cat').value;
-      const name = document.getElementById('in-name').value;
-      const cls = document.getElementById('in-class').value;
-      const file = document.getElementById('in-file').files[0];
-
-      if(!cat || !name || !file) return alert("全項目必須です");
-
-      const reader = new FileReader();
-      reader.onloadend = function() {
-        const base64 = reader.result; // data:image/jpeg;base64,...
-        // 画像アップロード -> マスタ追加の順で実行
-        const btn = event.target; btn.disabled=true; btn.innerText="送信中...";
-        
-        callGas("upload_image", { imageData: base64, mimeType: file.type, fileName: file.name }).then(res1 => {
-          if(res1.result === 'success') {
-            return callGas("add_master", { category: cat, name: name, className: cls, image: res1.url });
-          } else throw new Error("画像アップ失敗");
-        }).then(res2 => {
-          if(res2.result === 'success') {
-            alert("登録しました");
-            closeModal('editModal');
-            loadMasters();
-          }
-        }).catch(e => alert("エラー: " + e));
-      }
-      reader.readAsDataURL(file);
-    }
-
-    function delMaster(idx) {
-      if(confirm("本当に削除しますか？")) {
-        callGas("delete_master", { rowIndex: idx }).then(() => loadMasters());
-      }
-    }
-
-    // ==========================================
-    // 3. オプション管理ロジック
-    // ==========================================
-    function loadOptions() {
-      document.getElementById('opt-loading').style.display = 'block';
-      document.getElementById('opt-list-body').innerHTML = '';
-      callGas("get_option_list").then(res => {
-        document.getElementById('opt-loading').style.display = 'none';
-        const tb = document.getElementById('opt-list-body');
-        if(res.result === 'success') {
-          res.data.forEach(o => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${o.name}</td>
-              <td>¥${o.p24}</td>
-              <td><button class="btn btn-danger btn-sm" onclick="delOption(${o.rowIndex})">削除</button></td>
-            `;
-            tb.appendChild(tr);
-          });
-        }
-      });
-    }
-
-    function showAddOptModal() {
-      document.getElementById('edit-title').innerText = "オプションを追加";
-      document.getElementById('edit-form-container').innerHTML = `
-        <label>名称</label><input type="text" id="op-name">
-        <label>4時間料金</label><input type="number" id="op-p4">
-        <label>8時間料金</label><input type="number" id="op-p8">
-        <label>24時間料金</label><input type="number" id="op-p24">
-        <label>以後1日料金</label><input type="number" id="op-add">
-        <label>説明(任意)</label><textarea id="op-desc"></textarea>
-        <button class="btn btn-primary" onclick="submitOption()">登録する</button>
-      `;
-      document.getElementById('editModal').style.display = 'flex';
-    }
-
-    function submitOption() {
-      const d = {
-        name: document.getElementById('op-name').value,
-        p4: document.getElementById('op-p4').value,
-        p8: document.getElementById('op-p8').value,
-        p24: document.getElementById('op-p24').value,
-        pAdd: document.getElementById('op-add').value,
-        desc: document.getElementById('op-desc').value
-      };
-      if(!d.name || !d.p24) return alert("名称と24時間料金は必須です");
-      
-      callGas("add_option", d).then(res => {
-        if(res.result === 'success') {
-          alert("追加しました");
-          closeModal('editModal');
-          loadOptions();
-        }
-      });
-    }
-
-    function delOption(idx) {
-      if(confirm("削除しますか？")) {
-        callGas("delete_option", { rowIndex: idx }).then(() => loadOptions());
-      }
-    }
-
-    // 共通: モーダル閉じる
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    // --- その他管理機能 ---
+    function renderVehicleList(l){const d=document.getElementById('vehicle-list-body');let h="";const t=new Date();const w=new Date();w.setDate(t.getDate()+30);l.forEach(v=>{let c1="text-success",c2="text-success",c3="text-success";if(v.insurance&&v.insurance!=="-"){if(new Date(v.insurance)<t)c1="text-danger";else if(new Date(v.insurance)<w)c1="text-warning";}if(v.inspection&&v.inspection!=="-"){if(new Date(v.inspection)<t)c2="text-danger";else if(new Date(v.inspection)<w)c2="text-warning";}if(parseInt(v.km)>=parseInt(v.nextOil))c3="text-danger";else if(parseInt(v.km)>=parseInt(v.nextOil)-500)c3="text-warning";let b=v.status==='active'?'<span class="badge bg-green">可</span>':'<span class="badge bg-red">メンテ</span>';h+=`<tr><td>${v.id}</td><td><b>${v.name}</b><br><small>${v.plate}</small></td><td>${parseInt(v.km).toLocaleString()} km</td><td class="${c1}">${v.insurance}</td><td class="${c2}">${v.inspection}</td><td class="${c3}">次回:${parseInt(v.nextOil).toLocaleString()}</td><td>${b}</td><td><button class="btn btn-sm" onclick="openVehicleModal(${v.id})">編集</button><button class="btn btn-sm btn-red" onclick="deleteVehicle(${v.id})">削除</button></td></tr>`;});d.innerHTML=h;}
+    function openVehicleModal(id){const v=currentVehicles.find(i=>i.id==id);if(!v)return;document.getElementById('vehicle-id').value=v.id;document.getElementById('vehicle-name-display').innerText=v.name;document.getElementById('v-plate').value=v.plate;document.getElementById('v-km').value=v.km;document.getElementById('v-oil').value=v.nextOil;const f=(d)=>(d&&d!=='-')?d.replace(/\//g,'-'):'';document.getElementById('v-insurance').value=f(v.insurance);document.getElementById('v-inspection').value=f(v.inspection);document.getElementById('v-status').value=v.status;document.getElementById('vehicleModal').style.display='flex';}
+    function saveVehicle(){const d={action:"update_vehicle",id:document.getElementById('vehicle-id').value,plate:document.getElementById('v-plate').value,km:document.getElementById('v-km').value,nextOil:document.getElementById('v-oil').value,insurance:document.getElementById('v-insurance').value,inspection:document.getElementById('v-inspection').value,status:document.getElementById('v-status').value};callGas("update_vehicle",d).then(d=>{if(d.result==='success'){alert("更新しました");document.getElementById('vehicleModal').style.display='none';fetchData();}});}
+    function deleteVehicle(id) { if(confirm("本当にこの車両を削除しますか？\n（予約履歴は残りますが、復元はできません）")) { callGas("delete_vehicle", { id: id }).then(d=>{ if(d.result==='success') { alert("削除しました"); fetchData(); } else { alert("削除エラー"); } }); } }
+    function updateCalendar(l){calendar.removeAllEvents();l.forEach(b=>{let r=b.range||b.dateRange||"";if(r.includes("〜")){const p=r.split("〜");calendar.addEvent({title:b.bike+' ('+b.name+')',start:new Date(p[0]),end:new Date(p[1]),color:'#06C755'});}else{calendar.addEvent({title:b.bike,start:new Date(r),color:'#06C755'});}});}
+    function fetchPriceClasses(){callGas("get_price_classes").then(d=>{if(d.result==='success'){priceClasses=d.data;const s=document.getElementById('master-class');s.innerHTML="";d.data.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.text=p.name;s.appendChild(o);});}});}
+    function fetchMasterList(){callGas("get_master_list").then(d=>{if(d.result==='success'){masterBikes=d.data; let h="";d.data.forEach(m=>{h+=`<tr><td>${m.category}</td><td>${m.name}</td><td>${m.className}</td><td><button class="btn btn-sm" onclick="openMasterModal(${m.rowIndex},'${m.category}','${m.name}','${m.className}','${m.image}')">編集</button><button class="btn btn-sm btn-red" onclick="deleteMaster(${m.rowIndex})">削除</button></td></tr>`});document.getElementById('master-list-body').innerHTML=h;}});}
+    function fetchOptionList(){callGas("get_option_list").then(d=>{if(d.result==='success'){optionList=d.data; let h="";d.data.forEach(o=>{h+=`<tr><td>${o.name}</td><td>24h: ¥${Number(o.p24).toLocaleString()}</td><td><button class="btn btn-sm btn-red" onclick="deleteOption(${o.rowIndex})">削除</button></td></tr>`});document.getElementById('option-list-body').innerHTML=h;}});}
+    function addOption(){const n=document.getElementById('opt-name').value;const p4=document.getElementById('opt-p4').value;const p8=document.getElementById('opt-p8').value;const p24=document.getElementById('opt-p24').value;const pAdd=document.getElementById('opt-pAdd').value;if(n&&p4&&p8&&p24&&pAdd)callGas("add_option",{name:n,p4:p4,p8:p8,p24:p24,pAdd:pAdd}).then(()=>{document.getElementById('opt-name').value="";document.getElementById('opt-p4').value="";document.getElementById('opt-p8').value="";document.getElementById('opt-p24').value="";document.getElementById('opt-pAdd').value="";fetchOptionList();});else alert("全ての項目を入力してください");}
+    function deleteOption(idx){if(confirm("削除しますか？"))callGas("delete_option",{rowIndex:idx}).then(()=>{fetchOptionList();});}
+    function openMasterModal(idx="",cat="",nm="",cls="",img=""){document.getElementById('master-rowIndex').value=idx;if(cat)document.getElementById('master-category').value=cat;document.getElementById('master-name').value=nm;if(cls)document.getElementById('master-class').value=cls;document.getElementById('master-image').value=img||"";if(!idx){document.getElementById('master-title').innerText="新規バイク登録";document.getElementById('master-details').style.display="block";document.getElementById('new-plate').value="";document.getElementById('new-km').value=0;document.getElementById('new-oil').value=3000;document.getElementById('new-insurance').value="";document.getElementById('new-inspection').value="";}else{document.getElementById('master-title').innerText="設定編集";document.getElementById('master-details').style.display="none";}document.getElementById('masterModal').style.display='flex';}
+    function saveMaster(){const idx=document.getElementById('master-rowIndex').value;const nm=document.getElementById('master-name').value;if(!nm)return alert("バイク名を入力");if(!idx){if(!document.getElementById('new-plate').value)return alert("【必須】ナンバープレートを入力してください");}const d={action:idx?"edit_master":"add_master",rowIndex:idx,category:document.getElementById('master-category').value,name:nm,className:document.getElementById('master-class').value,image:document.getElementById('master-image').value,plate:document.getElementById('new-plate').value,km:document.getElementById('new-km').value,nextOil:document.getElementById('new-oil').value,insurance:document.getElementById('new-insurance').value,inspection:document.getElementById('new-inspection').value};callGas(d.action,d).then(d=>{if(d.result==='success'){document.getElementById('masterModal').style.display='none';fetchMasterList();alert("保存しました");}else{alert("エラー:"+d.message);}});}
+    function deleteMaster(idx){if(confirm("削除しますか？"))callGas("delete_master",{rowIndex:idx}).then(()=>{fetchMasterList();});}
   </script>
 </body>
 </html>
