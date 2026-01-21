@@ -1,93 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>予約管理画面</title>
+  <title>Renta 管理システム</title>
   <style>
-    /* デザイン設定 */
-    body { font-family: sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
-    h2 { color: #06C755; text-align: center; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    /* ベーススタイル */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; padding: 0; margin: 0; color: #333; padding-bottom: 80px; }
+    h2 { color: #06C755; margin: 0; font-size: 1.2rem; }
     
-    .res-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-    .res-item:hover { background: #f9fff9; }
-    .res-info { flex: 1; }
-    .res-date { font-size: 0.85rem; color: #888; margin-bottom: 4px; }
-    .res-name { font-weight: bold; font-size: 1.1rem; }
-    .res-bike { color: #06C755; font-size: 0.9rem; }
-    .status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #eee; color: #555; }
-    
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+    /* ナビゲーションバー */
+    .nav-bar { position: fixed; top: 0; left: 0; width: 100%; background: #fff; display: flex; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; }
+    .nav-item { flex: 1; text-align: center; padding: 15px 0; cursor: pointer; font-weight: bold; color: #888; border-bottom: 3px solid transparent; font-size: 0.9rem; }
+    .nav-item.active { color: #06C755; border-bottom: 3px solid #06C755; background: #f9fff9; }
+
+    /* コンテンツエリア */
+    .content-section { display: none; padding: 80px 20px 20px 20px; max-width: 900px; margin: 0 auto; }
+    .content-section.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* カード・リストスタイル */
+    .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
+    .res-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .res-item:hover { background: #fafafa; }
+    .res-date { font-size: 0.8rem; color: #888; }
+    .res-name { font-weight: bold; font-size: 1.05rem; }
+    .res-bike { color: #06C755; font-size: 0.9rem; font-weight: bold; }
+    .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #eee; color: #555; margin-left: 5px; }
+
+    /* テーブルスタイル (マスタ管理用) */
+    .master-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .master-table th { text-align: left; padding: 10px; background: #f0f0f0; border-bottom: 2px solid #ddd; }
+    .master-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    .thumb-img { width: 50px; height: 35px; object-fit: cover; border-radius: 4px; background: #eee; }
+
+    /* ボタン */
+    .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-block; text-align: center; }
+    .btn-primary { background: #06C755; color: white; width: 100%; }
+    .btn-danger { background: #ff4b4b; color: white; font-size: 0.8rem; padding: 5px 10px; border-radius: 5px; }
+    .btn-sm { padding: 5px 10px; font-size: 0.8rem; border-radius: 5px; }
+    .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: #06C755; color: white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; z-index: 900; }
+
+    /* モーダル */
+    #modal, #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
     .modal-content { background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 10px; max-height: 90vh; overflow-y: auto; }
-    .modal-header { font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #06C755; padding-bottom: 10px; }
-    
-    .detail-row { margin-bottom: 10px; display: flex; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+    .modal-header { font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #06C755; padding-bottom: 10px; display: flex; justify-content: space-between; }
+
+    /* 詳細表示 */
+    .detail-row { margin-bottom: 10px; display: flex; border-bottom: 1px solid #f9f9f9; padding-bottom: 5px; }
     .detail-label { width: 100px; font-weight: bold; color: #666; font-size: 0.9rem; }
     .detail-val { flex: 1; word-break: break-all; }
     
+    /* 入力フォーム */
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+    
+    /* メール・電話エリア */
     .action-area { margin-top: 20px; background: #f8f8f8; padding: 15px; border-radius: 8px; }
     .action-title { font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #06C755; }
-    
-    textarea { width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 5px; padding: 8px; margin-bottom: 10px; font-family: sans-serif; }
-    input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
-    
-    .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-    .btn-close { background: #666; color: white; margin-top: 15px; }
-    .btn-send { background: #06C755; color: white; }
-    .btn-tel { background: #333; color: white; display: block; text-decoration: none; text-align: center; padding: 10px; border-radius: 20px; font-weight: bold; }
+    .phone-display { font-size: 1.5rem; font-weight: bold; color: #333; text-align: center; background: white; padding: 10px; border-radius: 5px; border: 2px solid #eee; letter-spacing: 1px; }
 
     .mail-history { margin-top: 10px; max-height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 5px; background: white; }
     .mail-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-    .mail-date { color: #888; font-size: 0.75rem; }
-    .mail-subject { font-weight: bold; color: #333; }
     .mail-unread { background: #e6fffa; border-left: 3px solid #06C755; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>予約リスト</h2>
-    <div id="list-area">読み込み中...</div>
+  <div class="nav-bar">
+    <div class="nav-item active" onclick="switchTab('res')">予約一覧</div>
+    <div class="nav-item" onclick="switchTab('bikes')">車両マスタ</div>
+    <div class="nav-item" onclick="switchTab('options')">オプション</div>
   </div>
 
-  <div id="modal">
-    <div class="modal-content">
-      <div class="modal-header">お客様情報</div>
-      <div id="modal-body"></div>
-      
-      <div class="action-area">
-        <div class="action-title">📩 このお客様からの受信メール</div>
-        <div id="mail-list" class="mail-history">読み込み中...</div>
-        <button class="btn" style="background:#ddd; font-size:0.8rem; margin-top:5px;" onclick="loadMails()">再読み込み</button>
+  <div id="sec-res" class="content-section active">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h2>予約リスト</h2>
+        <button class="btn btn-sm" style="background:#ddd;" onclick="loadBookings()">更新</button>
       </div>
-
-      <div class="action-area">
-        <div class="action-title">📞 電話で連絡</div>
-        <a href="#" id="tel-link" class="btn-tel">電話をかける</a>
-      </div>
-
-      <div class="action-area">
-        <div class="action-title">✉️ メールを送信</div>
-        <div id="email-form">
-          <input type="text" id="mail-subject" placeholder="件名" value="【Renta】ご予約について">
-          <textarea id="mail-body" placeholder="本文を入力..."></textarea>
-          <button class="btn btn-send" onclick="sendMail()">送信する</button>
-        </div>
-        <div id="no-email-msg" style="color:red; display:none; font-size:0.9rem;">※メールアドレスが登録されていません</div>
-      </div>
-
-      <button class="btn btn-close" onclick="closeModal()">閉じる</button>
+      <div id="list-area">読み込み中...</div>
     </div>
   </div>
 
+  <div id="sec-bikes" class="content-section">
+    <div class="card">
+      <h2>車両リスト</h2>
+      <div style="overflow-x:auto;">
+        <table class="master-table">
+          <thead><tr><th>画像</th><th>車両名</th><th>クラス</th><th>操作</th></tr></thead>
+          <tbody id="bike-list-body"></tbody>
+        </table>
+      </div>
+      <div style="text-align:center; padding:20px; color:#888;" id="bike-loading">読み込み中...</div>
+    </div>
+    <div class="fab" onclick="showAddBikeModal()">＋</div>
+  </div>
+
+  <div id="sec-options" class="content-section">
+    <div class="card">
+      <h2>オプションリスト</h2>
+      <table class="master-table">
+        <thead><tr><th>名称</th><th>24h価格</th><th>操作</th></tr></thead>
+        <tbody id="opt-list-body"></tbody>
+      </table>
+      <div style="text-align:center; padding:20px; color:#888;" id="opt-loading">読み込み中...</div>
+    </div>
+    <div class="fab" onclick="showAddOptModal()">＋</div>
+  </div>
+
+
+  <div id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>予約詳細</span>
+        <span style="cursor:pointer;" onclick="closeModal('modal')">×</span>
+      </div>
+      <div id="modal-body"></div>
+      
+      <div class="action-area">
+        <div class="action-title">📩 受信メール履歴</div>
+        <div id="mail-list" class="mail-history">読み込み中...</div>
+        <button class="btn btn-sm" style="background:#ddd; width:100%; margin-top:5px;" onclick="loadMails()">更新</button>
+      </div>
+
+      <div class="action-area">
+        <div class="action-title">📞 電話番号</div>
+        <div id="phone-display" class="phone-display"></div>
+        <div style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">※番号を見て手動で発信してください</div>
+      </div>
+
+      <div class="action-area">
+        <div class="action-title">✉️ メール送信</div>
+        <div id="email-form">
+          <input type="text" id="mail-subject" placeholder="件名" value="【Renta】ご予約について">
+          <textarea id="mail-body" placeholder="本文..."></textarea>
+          <button class="btn btn-primary" onclick="sendMail()">送信する</button>
+        </div>
+        <div id="no-email-msg" style="color:red; display:none;">※メールアドレス未登録</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="edit-title">追加</span>
+        <span style="cursor:pointer;" onclick="closeModal('editModal')">×</span>
+      </div>
+      <div id="edit-form-container"></div>
+    </div>
+  </div>
+
+
   <script>
-    // ★重要：ここにGASのウェブアプリURLを貼り付けてください
+    // ★重要：GASのURLをここに貼る
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
 
     let currentData = null;
+    let priceClasses = []; // 料金クラスリスト
 
-    // GASとの通信用関数 (Web版と同じ仕組み)
+    // 通信共通関数
     function callGas(action, params = {}) {
       return fetch(GAS_URL, {
         method: 'POST',
@@ -95,103 +168,256 @@
       }).then(response => response.json());
     }
 
-    window.onload = function() { loadBookings(); };
+    window.onload = function() {
+      loadBookings(); // 初期表示
+      // 料金クラスだけ先に取っておく
+      callGas("get_price_classes").then(res => { if(res.result==='success') priceClasses = res.data; });
+    };
 
+    // --- タブ切り替え ---
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+      
+      if(tab === 'res') {
+        document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+        document.getElementById('sec-res').classList.add('active');
+        loadBookings();
+      } else if(tab === 'bikes') {
+        document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+        document.getElementById('sec-bikes').classList.add('active');
+        loadMasters();
+      } else {
+        document.querySelector('.nav-item:nth-child(3)').classList.add('active');
+        document.getElementById('sec-options').classList.add('active');
+        loadOptions();
+      }
+    }
+
+    // ==========================================
+    // 1. 予約管理ロジック
+    // ==========================================
     function loadBookings() {
-      callGas("get_bookings_admin")
-        .then(renderList)
-        .catch(e => alert("読み込みエラー: " + e));
+      document.getElementById('list-area').innerHTML = '<div style="text-align:center; padding:20px;">読み込み中...</div>';
+      callGas("get_bookings_admin").then(res => {
+        if(res.result !== 'success') return alert("エラー");
+        const list = document.getElementById('list-area');
+        list.innerHTML = "";
+        res.data.forEach(d => {
+          const div = document.createElement('div');
+          div.className = 'res-item';
+          div.innerHTML = `
+            <div class="res-info">
+              <div class="res-date">${d.date} | ${d.range}</div>
+              <div class="res-name">${d.name} 様 <span class="status-badge">${d.status}</span></div>
+              <div class="res-bike">🏍 ${d.bike}</div>
+            </div>
+            <div style="color:#ccc;">＞</div>
+          `;
+          div.onclick = () => openBookingModal(d);
+          list.appendChild(div);
+        });
+      }).catch(e => alert("通信エラー"));
     }
 
-    function renderList(res) {
-      if(res.result !== 'success') return alert("データ取得エラー");
-      const list = document.getElementById('list-area');
-      list.innerHTML = "";
-      res.data.forEach((d, i) => {
-        const div = document.createElement('div');
-        div.className = 'res-item';
-        div.innerHTML = `
-          <div class="res-info">
-            <div class="res-date">${d.date} | ${d.range}</div>
-            <div class="res-name">${d.name} 様 <span class="status-badge">${d.status}</span></div>
-            <div class="res-bike">🏍 ${d.bike}</div>
-          </div>
-          <div>＞</div>
-        `;
-        div.onclick = () => openModal(d);
-        list.appendChild(div);
-      });
-    }
-
-    function openModal(d) {
+    function openBookingModal(d) {
       currentData = d;
       const b = document.getElementById('modal-body');
-      
       b.innerHTML = `
-        <div class="detail-row"><div class="detail-label">お名前</div><div class="detail-val">${d.name}</div></div>
-        <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-val">${d.phone}</div></div>
+        <div class="detail-row"><div class="detail-label">名前</div><div class="detail-val">${d.name}</div></div>
+        <div class="detail-row"><div class="detail-label">電話</div><div class="detail-val">${d.phone}</div></div>
         <div class="detail-row"><div class="detail-label">住所</div><div class="detail-val">${d.address}</div></div>
-        <div class="detail-row"><div class="detail-label">メール</div><div class="detail-val">${d.email || '(未登録)'}</div></div>
-        <div class="detail-row"><div class="detail-label">備考</div><div class="detail-val">${d.memo || 'なし'}</div></div>
+        <div class="detail-row"><div class="detail-label">期間</div><div class="detail-val">${d.range}</div></div>
+        <div class="detail-row"><div class="detail-label">車両</div><div class="detail-val">${d.bike}</div></div>
         <div class="detail-row"><div class="detail-label">金額</div><div class="detail-val">${d.price}</div></div>
+        <div class="detail-row"><div class="detail-label">備考</div><div class="detail-val">${d.memo || '-'}</div></div>
       `;
+      
+      // ★修正箇所：電話番号を表示のみにする
+      document.getElementById('phone-display').innerText = d.phone;
 
-      document.getElementById('tel-link').href = `tel:${d.phone.replace(/-/g,'')}`;
-
+      // メール制御
       if(d.email && d.email.includes('@')) {
         document.getElementById('email-form').style.display = 'block';
         document.getElementById('no-email-msg').style.display = 'none';
         document.getElementById('mail-body').value = `${d.name} 様\n\nお世話になっております。\nRentaの〇〇です。\n\n`;
-        // メール履歴を読み込む
         loadMails();
       } else {
         document.getElementById('email-form').style.display = 'none';
         document.getElementById('no-email-msg').style.display = 'block';
-        document.getElementById('mail-list').innerHTML = '<div style="padding:10px; color:#888;">メールアドレスがありません</div>';
+        document.getElementById('mail-list').innerHTML = '<div style="padding:10px; color:#888;">アドレスなし</div>';
       }
-
       document.getElementById('modal').style.display = 'flex';
     }
 
     function loadMails() {
       const area = document.getElementById('mail-list');
-      area.innerHTML = '読み込み中...';
-      
-      callGas("get_customer_emails", { email: currentData.email })
-        .then(res => {
-          if(res.result === 'success') {
-            if(res.data.length === 0) {
-              area.innerHTML = '<div style="padding:10px; color:#888;">受信履歴はありません</div>';
-            } else {
-              area.innerHTML = "";
-              res.data.forEach(m => {
-                const div = document.createElement('div');
-                div.className = 'mail-item' + (m.isUnread ? ' mail-unread' : '');
-                div.innerHTML = `<div class="mail-date">${m.date}</div><div class="mail-subject">${m.subject}</div><div style="font-size:0.8rem; color:#555;">${m.body}</div>`;
-                area.appendChild(div);
-              });
-            }
-          } else {
-            area.innerHTML = '読み込みエラー: ' + res.message;
+      area.innerHTML = '検索中...';
+      callGas("get_customer_emails", { email: currentData.email }).then(res => {
+        if(res.result === 'success') {
+          if(res.data.length === 0) area.innerHTML = '<div style="padding:10px; color:#888;">履歴なし</div>';
+          else {
+            area.innerHTML = "";
+            res.data.forEach(m => {
+              const div = document.createElement('div');
+              div.className = 'mail-item' + (m.isUnread ? ' mail-unread' : '');
+              div.innerHTML = `<div style="font-size:0.7rem; color:#888;">${m.date}</div><div style="font-weight:bold;">${m.subject}</div><div style="font-size:0.8rem;">${m.body}</div>`;
+              area.appendChild(div);
+            });
           }
-        })
-        .catch(e => { area.innerHTML = '通信エラー'; });
+        } else { area.innerHTML = 'エラー'; }
+      });
     }
-
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
     function sendMail() {
-      if(!confirm("この内容でメールを送信しますか？")) return;
+      if(!confirm("送信しますか？")) return;
       const sub = document.getElementById('mail-subject').value;
       const body = document.getElementById('mail-body').value;
-      
-      callGas("send_custom_email", { to: currentData.email, subject: sub, body: body })
-        .then(r => {
-          if(r.result === 'success') { alert("送信しました！"); closeModal(); } 
-          else { alert("送信エラー: " + r.message); }
-        })
-        .catch(e => alert("通信エラー"));
+      callGas("send_custom_email", { to: currentData.email, subject: sub, body: body }).then(r => {
+        if(r.result === 'success') { alert("送信完了"); document.getElementById('modal').style.display='none'; }
+        else alert("失敗: "+r.message);
+      });
     }
+
+    // ==========================================
+    // 2. 車両マスタ管理ロジック
+    // ==========================================
+    function loadMasters() {
+      document.getElementById('bike-loading').style.display = 'block';
+      document.getElementById('bike-list-body').innerHTML = '';
+      callGas("get_master_list").then(res => {
+        document.getElementById('bike-loading').style.display = 'none';
+        const tb = document.getElementById('bike-list-body');
+        if(res.result === 'success') {
+          res.data.forEach(b => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><img src="${b.image || 'https://via.placeholder.com/50'}" class="thumb-img"></td>
+              <td>${b.name}<br><span style="font-size:0.7rem; color:#888;">${b.category}</span></td>
+              <td>${b.className}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="delMaster(${b.rowIndex})">削除</button></td>
+            `;
+            tb.appendChild(tr);
+          });
+        }
+      });
+    }
+
+    function showAddBikeModal() {
+      document.getElementById('edit-title').innerText = "車両を追加";
+      let opts = "";
+      priceClasses.forEach(p => opts += `<option value="${p.name}">${p.name}</option>`);
+      
+      document.getElementById('edit-form-container').innerHTML = `
+        <label>カテゴリ (例: HONDA)</label><input type="text" id="in-cat">
+        <label>車両名</label><input type="text" id="in-name">
+        <label>料金クラス</label><select id="in-class">${opts}</select>
+        <label>画像</label><input type="file" id="in-file">
+        <button class="btn btn-primary" onclick="submitBike()">登録する</button>
+      `;
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function submitBike() {
+      const cat = document.getElementById('in-cat').value;
+      const name = document.getElementById('in-name').value;
+      const cls = document.getElementById('in-class').value;
+      const file = document.getElementById('in-file').files[0];
+
+      if(!cat || !name || !file) return alert("全項目必須です");
+
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        const base64 = reader.result; // data:image/jpeg;base64,...
+        // 画像アップロード -> マスタ追加の順で実行
+        const btn = event.target; btn.disabled=true; btn.innerText="送信中...";
+        
+        callGas("upload_image", { imageData: base64, mimeType: file.type, fileName: file.name }).then(res1 => {
+          if(res1.result === 'success') {
+            return callGas("add_master", { category: cat, name: name, className: cls, image: res1.url });
+          } else throw new Error("画像アップ失敗");
+        }).then(res2 => {
+          if(res2.result === 'success') {
+            alert("登録しました");
+            closeModal('editModal');
+            loadMasters();
+          }
+        }).catch(e => alert("エラー: " + e));
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function delMaster(idx) {
+      if(confirm("本当に削除しますか？")) {
+        callGas("delete_master", { rowIndex: idx }).then(() => loadMasters());
+      }
+    }
+
+    // ==========================================
+    // 3. オプション管理ロジック
+    // ==========================================
+    function loadOptions() {
+      document.getElementById('opt-loading').style.display = 'block';
+      document.getElementById('opt-list-body').innerHTML = '';
+      callGas("get_option_list").then(res => {
+        document.getElementById('opt-loading').style.display = 'none';
+        const tb = document.getElementById('opt-list-body');
+        if(res.result === 'success') {
+          res.data.forEach(o => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${o.name}</td>
+              <td>¥${o.p24}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="delOption(${o.rowIndex})">削除</button></td>
+            `;
+            tb.appendChild(tr);
+          });
+        }
+      });
+    }
+
+    function showAddOptModal() {
+      document.getElementById('edit-title').innerText = "オプションを追加";
+      document.getElementById('edit-form-container').innerHTML = `
+        <label>名称</label><input type="text" id="op-name">
+        <label>4時間料金</label><input type="number" id="op-p4">
+        <label>8時間料金</label><input type="number" id="op-p8">
+        <label>24時間料金</label><input type="number" id="op-p24">
+        <label>以後1日料金</label><input type="number" id="op-add">
+        <label>説明(任意)</label><textarea id="op-desc"></textarea>
+        <button class="btn btn-primary" onclick="submitOption()">登録する</button>
+      `;
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function submitOption() {
+      const d = {
+        name: document.getElementById('op-name').value,
+        p4: document.getElementById('op-p4').value,
+        p8: document.getElementById('op-p8').value,
+        p24: document.getElementById('op-p24').value,
+        pAdd: document.getElementById('op-add').value,
+        desc: document.getElementById('op-desc').value
+      };
+      if(!d.name || !d.p24) return alert("名称と24時間料金は必須です");
+      
+      callGas("add_option", d).then(res => {
+        if(res.result === 'success') {
+          alert("追加しました");
+          closeModal('editModal');
+          loadOptions();
+        }
+      });
+    }
+
+    function delOption(idx) {
+      if(confirm("削除しますか？")) {
+        callGas("delete_option", { rowIndex: idx }).then(() => loadOptions());
+      }
+    }
+
+    // 共通: モーダル閉じる
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 </body>
 </html>
