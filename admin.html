@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>予約管理画面</title>
   <style>
+    /* デザイン設定 */
     body { font-family: sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
     h2 { color: #06C755; text-align: center; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -36,7 +37,6 @@
     .btn-send { background: #06C755; color: white; }
     .btn-tel { background: #333; color: white; display: block; text-decoration: none; text-align: center; padding: 10px; border-radius: 20px; font-weight: bold; }
 
-    /* メール履歴用 */
     .mail-history { margin-top: 10px; max-height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 5px; background: white; }
     .mail-item { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
     .mail-date { color: #888; font-size: 0.75rem; }
@@ -82,12 +82,25 @@
   </div>
 
   <script>
+    // ★重要：ここにGASのウェブアプリURLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxWvKydNXGLMLBDXLkigRBnJJeJgRLttFlruTFbDLCFNaKagLONSf_9JOT9hXjFaup_9w/exec";
+
     let currentData = null;
+
+    // GASとの通信用関数 (Web版と同じ仕組み)
+    function callGas(action, params = {}) {
+      return fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: action, ...params })
+      }).then(response => response.json());
+    }
 
     window.onload = function() { loadBookings(); };
 
     function loadBookings() {
-      google.script.run.withSuccessHandler(renderList).appApi({ action: "get_bookings_admin" });
+      callGas("get_bookings_admin")
+        .then(renderList)
+        .catch(e => alert("読み込みエラー: " + e));
     }
 
     function renderList(res) {
@@ -143,23 +156,26 @@
     function loadMails() {
       const area = document.getElementById('mail-list');
       area.innerHTML = '読み込み中...';
-      google.script.run.withSuccessHandler(res => {
-        if(res.result === 'success') {
-          if(res.data.length === 0) {
-            area.innerHTML = '<div style="padding:10px; color:#888;">受信履歴はありません</div>';
+      
+      callGas("get_customer_emails", { email: currentData.email })
+        .then(res => {
+          if(res.result === 'success') {
+            if(res.data.length === 0) {
+              area.innerHTML = '<div style="padding:10px; color:#888;">受信履歴はありません</div>';
+            } else {
+              area.innerHTML = "";
+              res.data.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'mail-item' + (m.isUnread ? ' mail-unread' : '');
+                div.innerHTML = `<div class="mail-date">${m.date}</div><div class="mail-subject">${m.subject}</div><div style="font-size:0.8rem; color:#555;">${m.body}</div>`;
+                area.appendChild(div);
+              });
+            }
           } else {
-            area.innerHTML = "";
-            res.data.forEach(m => {
-              const div = document.createElement('div');
-              div.className = 'mail-item' + (m.isUnread ? ' mail-unread' : '');
-              div.innerHTML = `<div class="mail-date">${m.date}</div><div class="mail-subject">${m.subject}</div><div style="font-size:0.8rem; color:#555;">${m.body}</div>`;
-              area.appendChild(div);
-            });
+            area.innerHTML = '読み込みエラー: ' + res.message;
           }
-        } else {
-          area.innerHTML = '読み込みエラー';
-        }
-      }).appApi({ action: "get_customer_emails", email: currentData.email });
+        })
+        .catch(e => { area.innerHTML = '通信エラー'; });
     }
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -168,10 +184,13 @@
       if(!confirm("この内容でメールを送信しますか？")) return;
       const sub = document.getElementById('mail-subject').value;
       const body = document.getElementById('mail-body').value;
-      google.script.run.withSuccessHandler(r => {
-        if(r.result === 'success') { alert("送信しました！"); closeModal(); } 
-        else { alert("送信エラー: " + r.message); }
-      }).appApi({ action: "send_custom_email", to: currentData.email, subject: sub, body: body });
+      
+      callGas("send_custom_email", { to: currentData.email, subject: sub, body: body })
+        .then(r => {
+          if(r.result === 'success') { alert("送信しました！"); closeModal(); } 
+          else { alert("送信エラー: " + r.message); }
+        })
+        .catch(e => alert("通信エラー"));
     }
   </script>
 </body>
