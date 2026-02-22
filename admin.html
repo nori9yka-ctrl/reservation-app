@@ -7,7 +7,6 @@
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
   
   <style>
-    /* CSSスタイル */
     body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f9; color: #333; display: flex; height: 100vh; }
     .sidebar { width: 250px; background-color: #343a40; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; background-color: #06C755; text-align: center; }
@@ -26,49 +25,36 @@
     .text-danger { color: #dc3545; font-weight:bold; } .text-warning { color: #e0a800; font-weight:bold; } .text-success { color: #28a745; }
     .view-section { display: none; } .view-section.active { display: block; }
     
-    /* モーダル共通 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
     .modal-content { background: white; padding: 30px; border-radius: 8px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .modal-header { font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #06C755; padding-bottom: 10px; display: flex; justify-content: space-between; }
-    
     .form-group { margin-bottom: 15px; } .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
     .form-group input, .form-group select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
     .flex-inputs { display: flex; gap: 15px; } .flex-inputs .form-group { flex: 1; }
     #master-details { display: none; background-color: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 20px; }
     .detail-title { font-weight: bold; color: #856404; margin-bottom: 10px; border-bottom: 1px dashed #856404; padding-bottom: 5px; font-size: 1.1rem; }
-    
-    /* 詳細情報表示用 */
     .detail-row { display: flex; border-bottom: 1px solid #eee; padding: 8px 0; }
-    .detail-label { width: 120px; font-weight: bold; color: #666; }
-    .detail-val { flex: 1; }
-    
-    /* メール・電話エリア */
+    .detail-label { width: 120px; font-weight: bold; color: #666; } .detail-val { flex: 1; }
     .action-area { margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
     .action-title { font-weight: bold; margin-bottom: 10px; color: #06C755; display: flex; align-items: center; gap: 5px; }
     .phone-display { font-size: 1.5rem; font-weight: bold; color: #333; text-align: center; background: white; padding: 10px; border-radius: 5px; border: 2px solid #ddd; letter-spacing: 1px; }
     .mail-history { margin-top: 10px; max-height: 200px; overflow-y: scroll; border: 1px solid #ddd; padding: 0; background: white; border-radius: 4px; }
     .mail-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    .mail-date { color: #888; font-size: 0.75rem; margin-bottom: 2px; }
-    .mail-subject { font-weight: bold; color: #333; }
-    .mail-body { font-size: 0.85rem; color: #555; margin-top: 4px; white-space: pre-wrap; }
+    .mail-date { color: #888; font-size: 0.75rem; margin-bottom: 2px; } .mail-subject { font-weight: bold; color: #333; } .mail-body { font-size: 0.85rem; color: #555; margin-top: 4px; white-space: pre-wrap; }
     .mail-unread { background: #e6fffa; border-left: 4px solid #06C755; }
 
-    /* 貸渡証CSS (変更なし) */
+    /* 貸渡証CSS */
     .sheet-wrapper { background: #555; padding: 20px; display: flex; justify-content: center; }
     .sheet-container { background: white; width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; line-height: 1.3; color: #000; }
     .sheet-header { border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .sheet-h1 { font-size: 18pt; margin: 0; font-weight: bold; }
-    .header-info { text-align: right; font-size: 10pt; }
+    .sheet-h1 { font-size: 18pt; margin: 0; font-weight: bold; } .header-info { text-align: right; font-size: 10pt; }
     .sheet-main { display: flex; gap: 15px; } .col-left, .col-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .box-title { background-color: #333; color: #fff; font-weight: bold; padding: 3px 5px; font-size: 10pt; text-align: center; margin-bottom: 3px; -webkit-print-color-adjust: exact; }
-    table.sheet-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
-    table.sheet-table th, table.sheet-table td { border: 1px solid #000; padding: 3px; }
+    table.sheet-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; } table.sheet-table th, table.sheet-table td { border: 1px solid #000; padding: 3px; }
     table.sheet-table th { background-color: #f0f0f0; text-align: center; font-weight: normal; -webkit-print-color-adjust: exact; }
-    .sheet-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; background: rgba(255,255,0,0.05); font-family: inherit; font-size: inherit; padding: 0 2px; outline: none; box-sizing: border-box; }
-    .sheet-input.right { text-align: right; }
+    .sheet-input { width: 100%; border: none; border-bottom: 1px dashed #ccc; background: rgba(255,255,0,0.05); font-family: inherit; font-size: inherit; padding: 0 2px; outline: none; box-sizing: border-box; } .sheet-input.right { text-align: right; }
     .label-cell { width: 60px; background: #eee; text-align: center; font-weight: bold; -webkit-print-color-adjust: exact; }
-    .terms-box { font-size: 7pt; line-height: 1.25; border: 1px solid #000; padding: 5px; flex-grow: 1; }
-    .terms-list { padding-left: 15px; margin: 0; } .terms-list li { margin-bottom: 2px; }
+    .terms-box { font-size: 7pt; line-height: 1.25; border: 1px solid #000; padding: 5px; flex-grow: 1; } .terms-list { padding-left: 15px; margin: 0; } .terms-list li { margin-bottom: 2px; }
     .exterior-msg { font-size: 9pt; font-weight: bold; text-align: center; padding: 8px; border: 2px dashed #999; margin-top: 5px; background-color: #fafafa; -webkit-print-color-adjust: exact; }
     .check-item { text-align: left !important; padding-left: 5px; font-size: 8pt; }
     .shop-stamp { width: 55px; height: 55px; border: 1px solid #ccc; color: #ccc; display: flex; align-items: center; justify-content: center; float: right; margin-left: 10px; font-size: 8pt; }
@@ -84,7 +70,7 @@
     <div class="nav-item" onclick="switchView('calendar')">📅 カレンダー</div>
     <div class="nav-item" onclick="switchView('settings')">⚙️ 料金設定</div>
     <div class="nav-item" onclick="switchView('options')">🔧 オプション管理</div>
-  </div>
+    <div class="nav-item" onclick="switchView('staff')">👥 スタッフ通知設定</div> </div>
 
   <div class="main">
     <div id="bookings" class="view-section active">
@@ -111,6 +97,22 @@
     <div id="settings" class="view-section"><h2 class="page-title">バイク登録・料金設定</h2><div class="card"><div style="text-align:right; margin-bottom:10px;"><button class="btn" onclick="openMasterModal()">＋ 新規バイク登録</button></div><table class="admin-table"><thead><tr><th>カテゴリ</th><th>バイク名</th><th>適用料金クラス</th><th>操作</th></tr></thead><tbody id="master-list-body"></tbody></table></div></div>
     
     <div id="options" class="view-section"><h2 class="page-title">オプション品管理</h2><div class="card"><div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;"><input type="text" id="opt-name" placeholder="オプション名 (例: ヘルメット)" style="flex:2;"><div class="flex-inputs" style="flex:4;"><input type="number" id="opt-p4" placeholder="4H"><input type="number" id="opt-p8" placeholder="8H"><input type="number" id="opt-p24" placeholder="24H"><input type="number" id="opt-pAdd" placeholder="以降"></div><button class="btn" onclick="addOption()">＋ 追加</button></div><table class="admin-table"><thead><tr><th>オプション名</th><th>24時間料金(目安)</th><th>操作</th></tr></thead><tbody id="option-list-body"></tbody></table></div></div>
+
+    <div id="staff" class="view-section">
+      <h2 class="page-title">スタッフ通知メール設定</h2>
+      <div class="card">
+        <p style="font-size:0.9rem; color:#555;">予約が入った際に、ここに追加したメールアドレス全員に通知が送られます。</p>
+        <div style="display:flex; gap:10px; margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px;">
+          <input type="text" id="staff-name" placeholder="スタッフ名 (例: 山田)" style="flex:1;">
+          <input type="email" id="staff-email" placeholder="メールアドレス" style="flex:2;">
+          <button class="btn" onclick="addStaff()">＋ 追加する</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>スタッフ名</th><th>メールアドレス</th><th>操作</th></tr></thead>
+          <tbody id="staff-list-body"></tbody>
+        </table>
+      </div>
+    </div>
 
     <div id="sheet-view" class="view-section">
       <div class="no-print" style="position:sticky; top:0; z-index:100; background:#333; padding:10px; text-align:center; color:white;">
@@ -151,14 +153,12 @@
         <span style="cursor:pointer;" onclick="document.getElementById('newBookingModal').style.display='none'">×</span>
       </div>
       <div style="font-size:0.9rem; color:#666; margin-bottom:10px;">お客様からのお電話内容を入力してください。</div>
-      
       <div class="flex-inputs">
         <div class="form-group"><label>お名前 <span style="color:red">*</span></label><input type="text" id="nb-name"></div>
         <div class="form-group"><label>電話番号 <span style="color:red">*</span></label><input type="text" id="nb-phone"></div>
       </div>
       <div class="form-group"><label>住所 (任意)</label><input type="text" id="nb-address"></div>
       <div class="form-group"><label>メール (任意)</label><input type="text" id="nb-email" placeholder="入力すると予約メールが届きます"></div>
-
       <div style="border-top:1px dashed #ccc; padding-top:10px; margin-top:10px;">
         <div class="flex-inputs">
           <div class="form-group"><label>貸出日</label><input type="date" id="nb-s-date" onchange="calcAdminPrice()"></div>
@@ -169,57 +169,16 @@
           <div class="form-group"><label>時間</label><select id="nb-e-time" onchange="calcAdminPrice()"></select></div>
         </div>
       </div>
-
-      <div class="form-group">
-        <label>車両選択 <span style="color:red">*</span></label>
-        <select id="nb-bike" onchange="calcAdminPrice()"><option value="">選択してください</option></select>
-      </div>
-
-      <div class="form-group">
-        <label>オプション / 備考</label>
-        <textarea id="nb-memo" placeholder="ヘルメット×1 など"></textarea>
-      </div>
-
-      <div style="background:#f0f0f0; padding:15px; border-radius:5px; text-align:center;">
-        <div style="font-size:0.9rem; color:#666;">予定合計金額 (自動計算)</div>
-        <input type="text" id="nb-price" value="¥0" style="font-size:1.5rem; font-weight:bold; text-align:center; color:#06C755; border:none; background:transparent;">
-      </div>
-
-      <button class="btn btn-primary" style="margin-top:15px;" onclick="submitNewBooking()">予約を登録する</button>
+      <div class="form-group"><label>車両選択 <span style="color:red">*</span></label><select id="nb-bike" onchange="calcAdminPrice()"><option value="">選択してください</option></select></div>
+      <div class="form-group"><label>オプション / 備考</label><textarea id="nb-memo" placeholder="ヘルメット×1 など"></textarea></div>
+      <div style="background:#f0f0f0; padding:15px; border-radius:5px; text-align:center;"><div style="font-size:0.9rem; color:#666;">予定合計金額 (自動計算)</div><input type="text" id="nb-price" value="¥0" style="font-size:1.5rem; font-weight:bold; text-align:center; color:#06C755; border:none; background:transparent;"></div>
+      <button class="btn btn-primary" style="margin-top:15px; width:100%;" onclick="submitNewBooking()">予約を登録する</button>
     </div>
   </div>
 
-  <div id="customerModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <span>お客様情報 & 連絡</span>
-        <span style="cursor:pointer; font-size:1.5rem;" onclick="document.getElementById('customerModal').style.display='none'">×</span>
-      </div>
-      <div id="cust-body"></div>
-      <div class="action-area">
-        <div class="action-title">📩 受信メール履歴 (最新5件)</div>
-        <div id="mail-list" class="mail-history">読み込み中...</div>
-        <button class="btn btn-sm" style="background:#ddd; width:100%; margin-top:5px;" onclick="loadMails()">再読み込み</button>
-      </div>
-      <div class="action-area">
-        <div class="action-title">📞 電話番号</div>
-        <div id="phone-display" class="phone-display"></div>
-        <div style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">※番号を見て手動で発信してください</div>
-      </div>
-      <div class="action-area">
-        <div class="action-title">✉️ メールを送信</div>
-        <div id="email-form">
-          <input type="text" id="mail-subject" placeholder="件名" value="【Renta】ご予約について">
-          <textarea id="mail-body" placeholder="本文を入力..." style="height:100px;"></textarea>
-          <button class="btn" onclick="sendMail()">送信する</button>
-        </div>
-        <div id="no-email-msg" style="color:red; display:none; text-align:center;">※メールアドレスが登録されていません</div>
-      </div>
-    </div>
-  </div>
+  <div id="customerModal" class="modal"><div class="modal-content"><div class="modal-header"><span>お客様情報 & 連絡</span><span style="cursor:pointer; font-size:1.5rem;" onclick="document.getElementById('customerModal').style.display='none'">×</span></div><div id="cust-body"></div><div class="action-area"><div class="action-title">📩 受信メール履歴 (最新5件)</div><div id="mail-list" class="mail-history">読み込み中...</div><button class="btn btn-sm" style="background:#ddd; width:100%; margin-top:5px;" onclick="loadMails()">再読み込み</button></div><div class="action-area"><div class="action-title">📞 電話番号</div><div id="phone-display" class="phone-display"></div><div style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">※番号を見て手動で発信してください</div></div><div class="action-area"><div class="action-title">✉️ メールを送信</div><div id="email-form"><input type="text" id="mail-subject" placeholder="件名" value="【Renta】ご予約について"><textarea id="mail-body" placeholder="本文を入力..." style="height:100px;"></textarea><button class="btn" style="width:100%;" onclick="sendMail()">送信する</button></div><div id="no-email-msg" style="color:red; display:none; text-align:center;">※メールアドレスが登録されていません</div></div></div></div>
 
   <div id="masterModal" class="modal"><div class="modal-content"><h3 id="master-title">バイク情報</h3><input type="hidden" id="master-rowIndex"><div class="form-group"><label>カテゴリ</label><select id="master-category"><option value="原付(50cc)">原付(50cc)</option><option value="原付二種(125cc)">原付二種(125cc)</option><option value="軽二輪(250cc)">軽二輪(250cc)</option><option value="中型(400cc)">中型(400cc)</option><option value="大型(Over750cc)">大型(Over750cc)</option></select></div><div class="form-group"><label>バイク名 <span style="color:red;">*</span></label><input type="text" id="master-name"></div><div class="form-group"><label>適用料金クラス</label><select id="master-class"></select></div><div class="form-group" style="border-top:1px dashed #ccc; padding-top:10px;"><label>車両画像</label><div style="display:flex; gap:10px; align-items:center;"><input type="file" id="image-upload" accept="image/*" style="width:auto;"><button type="button" class="btn btn-sm" onclick="resizeAndUpload()">アップロード</button></div><p style="font-size:0.8rem; color:#666; margin-top:5px;">※画像を選択して「アップロード」を押すとURLが生成されます。</p><input type="text" id="master-image" placeholder="画像URL (自動入力)" style="background:#f0f0f0;" readonly></div><div id="master-details"><div class="detail-title">▼ 【必須】車両管理データの入力</div><div class="form-group"><label>ナンバー <span style="color:red;">*</span></label><input type="text" id="new-plate"></div><div class="flex-inputs"><div class="form-group"><label>距離</label><input type="number" id="new-km" value="0"></div><div class="form-group"><label>オイル</label><input type="number" id="new-oil" value="3000"></div></div><div class="flex-inputs"><div class="form-group"><label>自賠責</label><input type="date" id="new-insurance"></div><div class="form-group"><label>車検</label><input type="date" id="new-inspection"></div></div></div><div style="text-align:right; margin-top:15px;"><button class="btn" style="background:#999;" onclick="document.getElementById('masterModal').style.display='none'">閉じる</button><button class="btn" onclick="saveMaster()">保存</button></div></div></div>
-  
   <div id="vehicleModal" class="modal"><div class="modal-content"><h3>車両編集</h3><input type="hidden" id="vehicle-id"><div id="vehicle-name-display" style="font-weight:bold; margin-bottom:10px;"></div><div class="form-group"><label>ナンバー</label><input type="text" id="v-plate"></div><div class="flex-inputs"><div class="form-group"><label>距離</label><input type="number" id="v-km"></div><div class="form-group"><label>次回オイル</label><input type="number" id="v-oil"></div></div><div class="flex-inputs"><div class="form-group"><label>自賠責</label><input type="date" id="v-insurance"></div><div class="form-group"><label>車検</label><input type="date" id="v-inspection"></div></div><div class="form-group"><label>状態</label><select id="v-status"><option value="active">貸出可</option><option value="maintenance">メンテ中</option></select></div><div style="text-align:right; margin-top:15px;"><button class="btn" style="background:#999;" onclick="document.getElementById('vehicleModal').style.display='none'">キャンセル</button><button class="btn" onclick="saveVehicle()">更新</button></div></div></div>
 
   <script>
@@ -228,19 +187,13 @@
     
     let currentBookings=[]; let currentVehicles=[]; let masterBikes=[]; let optionList=[]; let priceClasses=[]; let calendar; let currentData=null;
     
-    function callGas(action, params = {}) {
-      return fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: action, ...params })
-      }).then(response => response.json());
-    }
+    function callGas(action, params = {}) { return fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: action, ...params }) }).then(response => response.json()); }
 
     document.addEventListener('DOMContentLoaded', ()=>{ 
       fetchData(); fetchPriceClasses(); fetchOptionList(); fetchMasterList(); 
       var cEl=document.getElementById('calendar-el'); 
       calendar = new FullCalendar.Calendar(cEl,{ initialView:'dayGridMonth', locale:'ja', headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' } }); 
       calendar.render(); 
-      // 時間選択肢生成 (9:00-18:00)
       const ts = document.getElementById('nb-s-time'), te = document.getElementById('nb-e-time');
       for(let i=9; i<=18; i++){
         const o1=document.createElement('option'); o1.value=i; o1.text=i+":00"; ts.appendChild(o1);
@@ -249,98 +202,55 @@
       ts.value=10; te.value=18;
     });
     
-    function switchView(id){ document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='calendar') setTimeout(()=>calendar.render(),100); if(id==='settings') fetchMasterList(); if(id==='options') fetchOptionList(); if(id==='vehicles') fetchData(); }
+    function switchView(id){ 
+      document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); 
+      document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); 
+      document.getElementById(id).classList.add('active'); 
+      if(id==='calendar') setTimeout(()=>calendar.render(),100); 
+      if(id==='settings') fetchMasterList(); 
+      if(id==='options') fetchOptionList(); 
+      if(id==='vehicles') fetchData(); 
+      if(id==='staff') fetchStaff(); // スタッフリスト取得
+    }
+
+    // --- ★新機能：スタッフ設定管理 ---
+    function fetchStaff() {
+      callGas("get_staff").then(d => {
+        if(d.result === 'success') {
+          let h = "";
+          d.data.forEach(s => {
+            h += `<tr><td>${s.name}</td><td>${s.email}</td><td><button class="btn btn-sm btn-red" onclick="deleteStaff(${s.rowIndex})">削除</button></td></tr>`;
+          });
+          document.getElementById('staff-list-body').innerHTML = h;
+        }
+      });
+    }
+    function addStaff() {
+      const n = document.getElementById('staff-name').value;
+      const e = document.getElementById('staff-email').value;
+      if(n && e) {
+        callGas("add_staff", {name: n, email: e}).then(() => {
+          document.getElementById('staff-name').value = "";
+          document.getElementById('staff-email').value = "";
+          fetchStaff();
+        });
+      } else { alert("名前とメールアドレスを入力してください"); }
+    }
+    function deleteStaff(idx) {
+      if(confirm("このスタッフを通知リストから削除しますか？")) {
+        callGas("delete_staff", {rowIndex: idx}).then(() => fetchStaff());
+      }
+    }
+
     function fetchData(){ callGas("get_bookings_admin").then(d=>{if(d.result==='success'){currentBookings=d.data;renderBookingList(d.data);updateCalendar(d.data);}}); callGas("get_vehicles").then(d=>{if(d.result==='success'){currentVehicles = d.data; renderVehicleList(d.data);}}); }
     function clean(str) { return String(str || "").trim(); }
     function safeParseInt(val) { const n = parseInt(val); return isNaN(n) ? 0 : n; }
     function calculatePrice(rates, hours) { const p4 = safeParseInt(rates.p4); const p8 = safeParseInt(rates.p8); const p24 = safeParseInt(rates.p24); const pAdd = safeParseInt(rates.pAdd); if (hours <= 4) return p4; else if (hours <= 8) return p8; else if (hours <= 24) return p24; else { const extraDays = Math.ceil((hours - 24) / 24); return p24 + (pAdd * extraDays); } }
 
-    // --- ★新機能：新規予約(電話受付) ---
-    function openNewBookingModal() {
-      // フォーム初期化
-      document.getElementById('nb-name').value=""; document.getElementById('nb-phone').value="";
-      document.getElementById('nb-address').value=""; document.getElementById('nb-email').value="";
-      document.getElementById('nb-memo').value=""; document.getElementById('nb-price').value="¥0";
-      
-      // バイク選択肢更新
-      const s = document.getElementById('nb-bike');
-      s.innerHTML = '<option value="">選択してください</option>';
-      masterBikes.forEach(m => {
-        const o = document.createElement('option');
-        o.value = m.name; o.text = `[${m.category}] ${m.name}`;
-        s.appendChild(o);
-      });
-      document.getElementById('newBookingModal').style.display = 'flex';
-    }
+    function openNewBookingModal() { document.getElementById('nb-name').value=""; document.getElementById('nb-phone').value=""; document.getElementById('nb-address').value=""; document.getElementById('nb-email').value=""; document.getElementById('nb-memo').value=""; document.getElementById('nb-price').value="¥0"; const s = document.getElementById('nb-bike'); s.innerHTML = '<option value="">選択してください</option>'; masterBikes.forEach(m => { const o = document.createElement('option'); o.value = m.name; o.text = `[${m.category}] ${m.name}`; s.appendChild(o); }); document.getElementById('newBookingModal').style.display = 'flex'; }
+    function calcAdminPrice() { const sd = document.getElementById('nb-s-date').value; const st = document.getElementById('nb-s-time').value; const ed = document.getElementById('nb-e-date').value; const et = document.getElementById('nb-e-time').value; const bikeName = document.getElementById('nb-bike').value; if(!sd || !ed || !bikeName) return; const sDate = new Date(sd); sDate.setHours(st); const eDate = new Date(ed); eDate.setHours(et); const diffMs = eDate - sDate; if(diffMs <= 0) { document.getElementById('nb-price').value = "日時エラー"; return; } const diffHours = diffMs / (1000*60*60); const bikeData = masterBikes.find(m => clean(m.name) === clean(bikeName)); if(bikeData) { const price = calculatePrice(bikeData, diffHours); document.getElementById('nb-price').value = "¥" + price.toLocaleString(); } }
+    function submitNewBooking() { const name = document.getElementById('nb-name').value; const phone = document.getElementById('nb-phone').value; const bike = document.getElementById('nb-bike').value; if(!name || !phone || !bike) return alert("名前・電話・車両は必須です"); if(!confirm("この内容で予約を登録しますか？")) return; const sd = document.getElementById('nb-s-date').value; const st = document.getElementById('nb-s-time').value; const ed = document.getElementById('nb-e-date').value; const et = document.getElementById('nb-e-time').value; const fullS = `${sd.replace(/-/g,'/')} ${st}:00`; const fullE = `${ed.replace(/-/g,'/')} ${et}:00`; const data = { action: "reserve", userId: "PHONE_ADMIN", displayName: name, regName: name, regKana: "", regPhone: phone, regZip: "", regAddress: document.getElementById('nb-address').value, email: document.getElementById('nb-email').value, dateRange: `${fullS} 〜 ${fullE}`, totalDays: "管理者入力", bikeName: bike, options: "", memo: document.getElementById('nb-memo').value, totalPrice: document.getElementById('nb-price').value }; callGas("check_availability_final", {startDate:fullS, endDate:fullE, bikeName:bike}).then(d=>{ if(d.result==='error'){ alert("【警告】その日時は既に予約が入っています！"); if(!confirm("重複していますが、強制的に登録しますか？")) return; } return callGas("reserve", data); }).then(res => { if(res && res.result === 'success') { alert("予約を登録しました！"); document.getElementById('newBookingModal').style.display='none'; fetchData(); } else { alert("登録エラー: " + (res ? res.message : "不明")); } }).catch(e => alert("通信エラー: " + e)); }
 
-    function calcAdminPrice() {
-      const sd = document.getElementById('nb-s-date').value; const st = document.getElementById('nb-s-time').value;
-      const ed = document.getElementById('nb-e-date').value; const et = document.getElementById('nb-e-time').value;
-      const bikeName = document.getElementById('nb-bike').value;
-      
-      if(!sd || !ed || !bikeName) return;
-      
-      const sDate = new Date(sd); sDate.setHours(st);
-      const eDate = new Date(ed); eDate.setHours(et);
-      const diffMs = eDate - sDate; 
-      if(diffMs <= 0) { document.getElementById('nb-price').value = "日時エラー"; return; }
-      const diffHours = diffMs / (1000*60*60);
-      
-      const bikeData = masterBikes.find(m => clean(m.name) === clean(bikeName));
-      if(bikeData) {
-        const price = calculatePrice(bikeData, diffHours);
-        document.getElementById('nb-price').value = "¥" + price.toLocaleString();
-      }
-    }
-
-    function submitNewBooking() {
-      const name = document.getElementById('nb-name').value;
-      const phone = document.getElementById('nb-phone').value;
-      const bike = document.getElementById('nb-bike').value;
-      
-      if(!name || !phone || !bike) return alert("名前・電話・車両は必須です");
-      if(!confirm("この内容で予約を登録しますか？")) return;
-
-      const sd = document.getElementById('nb-s-date').value; const st = document.getElementById('nb-s-time').value;
-      const ed = document.getElementById('nb-e-date').value; const et = document.getElementById('nb-e-time').value;
-      const fullS = `${sd.replace(/-/g,'/')} ${st}:00`;
-      const fullE = `${ed.replace(/-/g,'/')} ${et}:00`;
-      
-      // データ作成
-      const data = {
-        action: "reserve",
-        userId: "PHONE_ADMIN", // 管理者が登録した目印
-        displayName: name,
-        regName: name, regKana: "", // カナは省略
-        regPhone: phone, regZip: "", regAddress: document.getElementById('nb-address').value,
-        email: document.getElementById('nb-email').value,
-        dateRange: `${fullS} 〜 ${fullE}`,
-        totalDays: "管理者入力", // 自動計算はGAS側ではないので適当でOK
-        bikeName: bike,
-        options: "", // オプションはメモへ
-        memo: document.getElementById('nb-memo').value,
-        totalPrice: document.getElementById('nb-price').value
-      };
-
-      // 送信 (在庫チェックも含む)
-      callGas("check_availability_final", {startDate:fullS, endDate:fullE, bikeName:bike}).then(d=>{
-        if(d.result==='error'){ 
-          alert("【警告】その日時は既に予約が入っています！\n（強制登録も可能ですが、確認してください）");
-          if(!confirm("重複していますが、強制的に登録しますか？")) return;
-        }
-        return callGas("reserve", data);
-      }).then(res => {
-        if(res && res.result === 'success') {
-          alert("予約を登録しました！");
-          document.getElementById('newBookingModal').style.display='none';
-          fetchData(); // リスト更新
-        } else {
-          alert("登録エラー: " + (res ? res.message : "不明"));
-        }
-      }).catch(e => alert("通信エラー: " + e));
-    }
-
-    // --- その他 (変更なし) ---
     function openSheet(id){const b=currentBookings.find(x=>x.rowIndex == id || x.id == id); if(!b)return;document.getElementById('sheet-today').innerText=new Date().toLocaleDateString();document.getElementById('sheet-id').innerText=b.id || "R-"+b.rowIndex;document.getElementById('sheet-rowIndex').value=b.rowIndex;document.getElementById('sheet-name').value=b.name;document.getElementById('sheet-zip').value=b.zip||"";document.getElementById('sheet-address').value=b.address;document.getElementById('sheet-phone').value=b.phone;document.getElementById('sheet-license').value=b.license||"";document.getElementById('sheet-bike').value=b.bike;const bName=clean(b.bike); const v=currentVehicles.find(v=>clean(v.name)===bName);document.getElementById('sheet-startKm').value=b.startKm||(v?v.km:""); document.getElementById('sheet-plate').value=v?v.plate:""; document.getElementById('sheet-endKm').value=b.endKm||"";let startStr="",endStr=""; const range=b.dateRange||b.range||""; if(range.includes("〜") || range.includes("~")){const p=range.split(/\s*[〜~]\s*/); startStr=p[0].trim(); endStr=p[1].trim();}else{ startStr=range; endStr=range; }document.getElementById('sheet-start-date').value=startStr; document.getElementById('sheet-end-date').value=endStr;const startDate=new Date(startStr); const endDate=new Date(endStr);let diffMs=endDate-startDate; if(diffMs<0)diffMs=0; const diffHours=diffMs/(1000*60*60);const tbody=document.getElementById('fee-table-body'); let rows="";let bikePrice=0; const bikeData=masterBikes.find(m=>clean(m.name)===bName);if(bikeData){bikePrice=calculatePrice(bikeData,diffHours);rows+=`<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right" value="¥${bikePrice.toLocaleString()}"></td></tr>`;}else{rows+=`<tr><td style="text-align:left; padding-left:5px;">基本料金 (${b.bike})</td><td><input type="text" class="sheet-input right"></td></tr>`;}if(b.options && b.options!=="なし"){const lines=b.options.split('\n');lines.forEach(line=>{if(!line.trim())return;const match=line.match(/^(.*?)\s*[×xX]\s*(\d+)$/);if(match){const optName=clean(match[1]); const qty=parseInt(match[2]);const optData=optionList.find(o=>clean(o.name)===optName);if(optData && diffHours > 0){ const price=calculatePrice(optData,diffHours)*qty; rows+=`<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right" value="¥${price.toLocaleString()}"></td></tr>`; } else {rows+=`<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right"></td></tr>`;}} else {rows+=`<tr><td style="text-align:left; padding-left:5px;">${line}</td><td><input type="text" class="sheet-input right"></td></tr>`;}});}rows+=`<tr><td style="text-align:left; padding-left:5px;">その他</td><td><input type="text" class="sheet-input right"></td></tr><tr style="font-weight:bold; border-top:2px double #000;"><td style="text-align:center; background:#eee;">合計</td><td><input type="text" class="sheet-input right" id="sheet-total-display" value="${b.price}" style="font-weight:bold;"></td></tr>`;tbody.innerHTML=rows;switchView('sheet-view');window.scrollTo(0,0);}
     function saveSheetData(){const d={action:"update_booking",rowIndex:document.getElementById('sheet-rowIndex').value,name:document.getElementById('sheet-name').value,phone:document.getElementById('sheet-phone').value,address:document.getElementById('sheet-address').value,license:document.getElementById('sheet-license').value,startKm:document.getElementById('sheet-startKm').value,endKm:document.getElementById('sheet-endKm').value,bikeName:document.getElementById('sheet-bike').value};const btn=document.getElementById('btn-save');btn.innerText="保存中...";callGas("update_booking",d).then(d=>{btn.innerText="💾 内容を保存";if(d.result==='success')alert("保存しました！");});}
     function renderBookingList(l){let h="";l.forEach(b=>{h+=`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.bike}</td><td>${b.range || b.dateRange}</td><td><button class="btn btn-sm btn-blue" onclick='openCustomerModal(${JSON.stringify(b).replace(/'/g, "&#39;")})'>詳細/メール</button><button class="btn btn-sm" onclick="openSheet('${b.rowIndex}')">📝 貸渡証</button></td></tr>`;});document.getElementById('booking-list-body').innerHTML=h;}
